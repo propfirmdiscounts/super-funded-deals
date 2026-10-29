@@ -64,80 +64,57 @@ jobs:
           years = sorted(by_year.keys(), reverse=True)
 
           # Build README
-          firm_slug = os.environ['FIRM_SLUG']
+          readme = f"""# {firm['name']} - Deal History
 
-          # YAML frontmatter
-          readme = "---\n"
-          readme += "license: other\n"
-          readme += "tags:\n"
-          readme += "- discount-codes\n"
-          readme += "- prop-firm\n"
-          readme += "- trading\n"
-          readme += f"- {firm_slug}\n"
-          readme += "size_categories:\n"
-          readme += "- n<1K\n"
-          readme += "---\n"
+          Historical deal observations from [PropFirmDiscount.com](https://propfirmdiscount.com) - The trusted prop firm coupon directory.
 
-          # Main content
-          readme += f"""# {firm['name']} - Deal History
+          **Prop firm page:** {firm['url']}
 
-Historical deal observations from [PropFirmDiscount.com](https://propfirmdiscount.com) - The trusted prop firm coupon directory.
+          **Verified exclusive discount code:** {code} (works any time; live rate always on prop firm page)
 
-**Prop firm page:** {firm['url']}
-
-**Verified exclusive discount code:** {code} (works any time; live rate always on prop firm page)
-
-Use discount code **{code}** to get **{discount} off** on {firm['name']} challenges and accounts in {month_year}. This exclusive discount code is verified by our team at PropFirmDiscount.com and gives you the best pricing on all {firm['name']} evaluation accounts.
+          Use discount code **{code}** to get **{discount}** on {firm['name']} challenges and accounts in {month_year}. This exclusive discount code is verified by our team at PropFirmDiscount.com and gives you the best pricing on all {firm['name']} evaluation accounts.
 
           ---
 
           ## Latest Deal
 
           ### {firm['name']} - {latest['title']}
-
-          <ul>
-          <li><strong>Published:</strong> {latest['date_published']}</li>
-          <li><strong>Offer ends:</strong> {latest.get('date_exp') or 'N/A'}</li>
-          <li><strong>Discount:</strong> {latest['discount_value']}</li>
+  
+          **Published:** {latest['date_published']}  
+          **Offer ends:** {latest.get('date_exp') or 'N/A'}  
+          **Discount:** {latest['discount_value']}  
           """
 
           if latest.get('scope'):
-              readme += f"<li><strong>Scope:</strong> {', '.join(latest['scope'])}</li>\n"
+              readme += f"**Scope:** {', '.join(latest['scope'])}  \n"
 
           if is_global:
-              readme += f"<li><strong>Code:</strong> {code}</li>\n"
-
-          readme += f"""<li><strong>Deal page:</strong> <a href="{latest['post_url']}">{latest['post_url']}</a></li>
-          </ul>
-          """
-
-          if not is_global:
-              readme += "\n**Note:** This deal has a limited-time campaign code. Visit the deal page to get the code and full terms.\n"
+              readme += f"\n**Code:** {code}  \n"
+          else:
+              readme += "\n**Note:** This deal has a limited-time campaign code. Visit the deal page to get the code and full terms.  \n"
 
           readme += f"""
+          **Deal page:** {latest['post_url']}
 
----
+          ---
 
-## Discount Code History
+          ## Deal History
 
-Total deals tracked: **{len(obs['observations'])}**
+          Total deals tracked: **{len(obs['observations'])}**
 
-"""
+          """
 
           # Tables by year
           for year in years:
               deals = by_year[year]
               readme += f"### {year} ({len(deals)} deals)\n\n"
-              readme += "| Deal Date | Title | Discount | Expires | Deal Link |\n"
+              readme += "| Date Published | Title | Discount | Expires | Deal Link |\n"
               readme += "|---|---|---|---|---|\n"
 
               for deal in deals:
                   title = deal['title'].replace('|', '\\|')
                   expires = deal.get('date_exp') or 'N/A'
-                  discount = deal['discount_value']
-                  if '%' in discount and 'off' not in discount.lower():
-                      discount = discount + ' off'
-                  readme += f"| {deal['date_published']} | {title} | {discount} | {expires} | [View Deal]({deal['post_url']}) |\n"
+                  readme += f"| {deal['date_published']} | {title} | {deal['discount_value']} | {expires} | [View Deal]({deal['post_url']}) |\n"
 
               readme += "\n"
 
@@ -147,19 +124,12 @@ Total deals tracked: **{len(obs['observations'])}**
 
           This repository tracks all historical deals for **{firm['name']}** published on PropFirmDiscount.com. Updated hourly via automated sync.
 
-          **Data source:** PropFirmDiscount.com
-          **Prop firm profile:** {firm['url']}
+          **Data source:** PropFirmDiscount.com  
+          **Prop firm profile:** {firm['url']}  
 
-          ## Freshness
+          ---
 
-          <!-- pfd-last-synced (auto-updated each sync) -->
           Last synced: {os.environ['STAMP']} (auto, hourly)
-
-          Deals are tracked continuously by the PropFirmDiscount team; this mirror syncs with the live API within an hour. Campaign codes come and go with each promotion; standing codes are re-verified yearly.
-
-          ## License
-
-          Data © PropFirmDiscount. May be referenced with attribution and a link to https://propfirmdiscount.com.
           """
 
           with open('README.md', 'w') as f:
