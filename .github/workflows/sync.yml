@@ -153,14 +153,18 @@ jobs:
           # Publish the observations as a real dataset file. Without this the HF
           # repo holds nothing but promotional markdown, which reads as repo
           # stuffing under the Hub content policy.
+          #
+          # A code is only attached to a deal when the firm uses one affiliate
+          # code across every offer; otherwise each deal carries its own
+          # campaign code, which is not published here.
           os.makedirs('datasets', exist_ok=True)
           records = []
           for o in obs['observations']:
               r = dict(o)
               r['prop_firm'] = firm['name']
               r['prop_firm_slug'] = os.environ['FIRM_SLUG']
-              r['standing_code'] = code
-              r['standing_discount'] = os.environ['DISCOUNT']
+              if is_global:
+                  r['code'] = code
               records.append(r)
           with open(f"datasets/{os.environ['FIRM_SLUG']}-deals.json", 'w',
                     encoding='utf-8') as f:
