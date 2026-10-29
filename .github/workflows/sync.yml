@@ -64,7 +64,17 @@ jobs:
           years = sorted(by_year.keys(), reverse=True)
 
           # Build README
-          readme = f"""# {firm['name']} - Deal History
+          readme = f"""---
+          license: other
+          tags:
+          - discount-codes
+          - prop-firm
+          - trading
+          - {os.environ['FIRM_SLUG']}
+          size_categories:
+          - n<1K
+          ---
+          # {firm['name']} - Deal History
 
           Historical deal observations from [PropFirmDiscount.com](https://propfirmdiscount.com) - The trusted prop firm coupon directory.
 
