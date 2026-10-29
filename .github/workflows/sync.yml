@@ -12,7 +12,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: hourly-sync
+  group: sync
   cancel-in-progress: false
 
 env:
