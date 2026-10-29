@@ -64,13 +64,14 @@ jobs:
           years = sorted(by_year.keys(), reverse=True)
 
           # Build README
+          firm_slug = os.environ['FIRM_SLUG']
           readme = f"""---
 license: other
 tags:
 - discount-codes
 - prop-firm
 - trading
-- {os.environ['FIRM_SLUG']}
+- {firm_slug}
 size_categories:
 - n<1K
 ---
