@@ -14,7 +14,7 @@ concurrency:
 
 env:
   FIRM_SLUG: super-funded
-  DEALSTORE_ID: 165
+  DEALSTORE_ID: 131
   FIRM_NAME: Super Funded
   STANDING_CODE: CHUN
   DISCOUNT: 30%
@@ -109,7 +109,7 @@ Use discount code **{code}** to get **{discount} off** on {firm['name']} challen
           if not is_global:
               readme += "\n**Note:** This deal has a limited-time campaign code. Visit the deal page to get the code and full terms.\n"
 
-          readme += """
+          readme += f"""
 
 ---
 
