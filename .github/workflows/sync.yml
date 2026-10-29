@@ -149,6 +149,22 @@ jobs:
 
           with open('README.md', 'w') as f:
               f.write(readme)
+
+          # Publish the observations as a real dataset file. Without this the HF
+          # repo holds nothing but promotional markdown, which reads as repo
+          # stuffing under the Hub content policy.
+          os.makedirs('datasets', exist_ok=True)
+          records = []
+          for o in obs['observations']:
+              r = dict(o)
+              r['prop_firm'] = firm['name']
+              r['prop_firm_slug'] = os.environ['FIRM_SLUG']
+              r['standing_code'] = code
+              r['standing_discount'] = os.environ['DISCOUNT']
+              records.append(r)
+          with open(f"datasets/{os.environ['FIRM_SLUG']}-deals.json", 'w',
+                    encoding='utf-8') as f:
+              json.dump(records, f, ensure_ascii=False, indent=2)
           PY
 
           # Remove observations.json - used only for building README, not published
@@ -235,6 +251,11 @@ jobs:
           slug = os.environ['FIRM_SLUG']
           front = ('---\n'
                    'license: other\n'
+                   'configs:\n'
+                   '- config_name: ' + slug + '-deals\n'
+                   '  data_files:\n'
+                   '  - split: data\n'
+                   '    path: datasets/' + slug + '-deals.json\n'
                    'tags:\n'
                    '  - discount-codes\n'
                    '  - prop-firm\n'
@@ -273,6 +294,23 @@ jobs:
 
           api = HfApi(token=os.environ['HF_TOKEN'])
           repo_id = f"propfirmdiscounts/{os.environ['FIRM_SLUG']}-deals"
+
+          # Surface a missing dataset repo as a warning annotation instead of
+          # passing silently, while leaving the GitHub mirror step unaffected.
+          try:
+              api.repo_info(repo_id=repo_id, repo_type='dataset')
+          except Exception:
+              print(f"::warning::HF dataset {repo_id} does not exist - skipping upload")
+              raise SystemExit(0)
+
+          # Dataset payload first, then the card that describes it.
+          api.upload_folder(
+              folder_path='datasets',
+              path_in_repo='datasets',
+              repo_id=repo_id,
+              repo_type='dataset',
+              commit_message='Sync observations'
+          )
 
           # Upload discovery files only (no observations.json)
           for f in ['llms.txt', 'ai.txt']:
