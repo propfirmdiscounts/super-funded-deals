@@ -113,7 +113,7 @@ jobs:
           for year in years:
               deals = by_year[year]
               readme += f"### {year} ({len(deals)} deals)\n\n"
-              readme += "| Date Published | Title | Discount | Expires | Deal Link |\n"
+              readme += "| Deal Date | Title | Discount | Expires | Deal Link |\n"
               readme += "|---|---|---|---|---|\n"
 
               for deal in deals:
