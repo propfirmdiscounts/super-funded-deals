@@ -2,7 +2,10 @@ name: Hourly Sync
 
 on:
   schedule:
-    - cron: '31 * * * *'
+    # Each repo gets its own minute (49 * * * *) instead of every mirror firing at
+    # the same time. 51 repos on one minute read as a bulk burst to any host
+    # watching commit patterns.
+    - cron: '49 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -39,7 +42,6 @@ jobs:
         run: |
           set -euo pipefail
           export MONTH_YEAR=$(date -u '+%B %Y')
-          export STAMP=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
 
           python3 - <<'PY'
           import json, os
@@ -130,17 +132,17 @@ jobs:
 
           ## About This Repository
 
-          This repository tracks all historical deals for **{firm['name']}** published on PropFirmDiscount.com. Updated hourly via automated sync.
+          This repository tracks all historical deals for **{firm['name']}** published on PropFirmDiscount.com. Updated automatically from the live API.
 
           **Data source:** PropFirmDiscount.com  
           **Prop firm profile:** {firm['url']}  
 
           ## Freshness
 
-          <!-- pfd-last-synced (auto-updated each sync) -->
-          Last synced: {os.environ['STAMP']} (auto, hourly)
-
-          Codes are re-verified continuously by the PropFirmDiscount team; this mirror tracks the live API within an hour. Campaign codes come and go with each promotion; standing codes are re-verified yearly.
+          This mirror is synced from the live API on a schedule; the deal history
+          above is the source of truth for what changed and when. Codes are
+          re-verified continuously by the PropFirmDiscount team. Campaign codes
+          come and go with each promotion; standing codes are re-verified yearly.
 
           ## License
 
@@ -294,7 +296,7 @@ jobs:
           pip install --quiet 'huggingface_hub>=0.20'
           python3 - <<'PY'
           import os
-          from huggingface_hub import HfApi
+          from huggingface_hub import HfApi, CommitOperationAdd
 
           api = HfApi(token=os.environ['HF_TOKEN'])
           repo_id = f"propfirmdiscounts/{os.environ['FIRM_SLUG']}-deals"
@@ -307,29 +309,29 @@ jobs:
               print(f"::warning::HF dataset {repo_id} does not exist - skipping upload")
               raise SystemExit(0)
 
-          # Dataset payload first, then the card that describes it.
-          api.upload_folder(
-              folder_path='datasets',
-              path_in_repo='datasets',
-              repo_id=repo_id,
-              repo_type='dataset',
-              commit_message='Sync observations'
-          )
-
-          # Upload discovery files only (no observations.json)
+          # One commit for the whole mirror. Uploading the folder and then each
+          # file separately wrote up to four commits per run, all carrying the
+          # same data — the kind of repeated bulk activity the Hub treats as
+          # spam.
+          ops = []
+          for root, _, files in os.walk('datasets'):
+              for name in files:
+                  src = os.path.join(root, name)
+                  ops.append(CommitOperationAdd(
+                      path_in_repo=src.replace(os.sep, '/'),
+                      path_or_fileobj=src,
+                  ))
           for f in ['llms.txt', 'ai.txt']:
               if os.path.exists(f):
-                  api.upload_file(
-                      path_or_fileobj=f,
-                      path_in_repo=f,
-                      repo_id=repo_id,
-                      repo_type='dataset'
-                  )
+                  ops.append(CommitOperationAdd(path_in_repo=f, path_or_fileobj=f))
+          if os.path.exists('hf-card.md'):
+              ops.append(CommitOperationAdd(
+                  path_in_repo='README.md', path_or_fileobj='hf-card.md'))
 
-          api.upload_file(
-              path_or_fileobj='hf-card.md',
-              path_in_repo='README.md',
+          api.create_commit(
               repo_id=repo_id,
-              repo_type='dataset'
+              repo_type='dataset',
+              operations=ops,
+              commit_message='Sync observations',
           )
           PY
