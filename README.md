@@ -72,17 +72,17 @@ Total deals tracked: **29**
 
 ## About This Repository
 
-This repository tracks all historical deals for **Super Funded** published on PropFirmDiscount.com. Updated hourly via automated sync.
+This repository tracks all historical deals for **Super Funded** published on PropFirmDiscount.com. Updated automatically from the live API.
 
 **Data source:** PropFirmDiscount.com  
 **Prop firm profile:** https://propfirmdiscount.com/prop-firm/super-funded/  
 
 ## Freshness
 
-<!-- pfd-last-synced (auto-updated each sync) -->
-Last synced: 2026-10-29T15:36:05Z (auto, hourly)
-
-Codes are re-verified continuously by the PropFirmDiscount team; this mirror tracks the live API within an hour. Campaign codes come and go with each promotion; standing codes are re-verified yearly.
+This mirror is synced from the live API on a schedule; the deal history
+above is the source of truth for what changed and when. Codes are
+re-verified continuously by the PropFirmDiscount team. Campaign codes
+come and go with each promotion; standing codes are re-verified yearly.
 
 ## License
 
