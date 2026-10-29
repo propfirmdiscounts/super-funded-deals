@@ -226,6 +226,24 @@ jobs:
           For licensing requests, contact support@propfirmdiscount.com.
           EOF
 
+          # Hugging Face dataset card: frontmatter + README body
+          python3 - <<'PY'
+          import os
+
+          slug = os.environ['FIRM_SLUG']
+          front = ('---\n'
+                   'license: other\n'
+                   'tags:\n'
+                   '  - discount-codes\n'
+                   '  - prop-firm\n'
+                   '  - trading\n'
+                   '  - ' + slug + '\n'
+                   '---\n\n')
+          readme_content = open('README.md', encoding='utf-8').read()
+          with open('hf-card.md', 'w', encoding='utf-8') as f:
+              f.write(front + readme_content)
+          PY
+
       - name: Commit and push
         run: |
           set -euo pipefail
@@ -263,20 +281,6 @@ jobs:
                       repo_id=repo_id,
                       repo_type='dataset'
                   )
-
-          # README with frontmatter
-          slug = os.environ['FIRM_SLUG']
-          front = ('---\n'
-                   'license: other\n'
-                   'tags:\n'
-                   '  - discount-codes\n'
-                   '  - prop-firm\n'
-                   '  - trading\n'
-                   '  - ' + slug + '\n'
-                   '---\n\n')
-          readme_content = open('README.md', encoding='utf-8').read()
-          with open('hf-card.md', 'w', encoding='utf-8') as f:
-              f.write(front + readme_content)
 
           api.upload_file(
               path_or_fileobj='hf-card.md',
