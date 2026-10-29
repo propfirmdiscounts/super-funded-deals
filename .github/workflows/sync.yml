@@ -79,22 +79,23 @@ jobs:
           ## Latest Deal
 
           ### {firm['name']} - {latest['title']}
-  
-          **Published:** {latest['date_published']}  
-          **Offer ends:** {latest.get('date_exp') or 'N/A'}  
-          **Discount:** {latest['discount_value']}  
+
+          <ul>
+          <li><strong>Published:</strong> {latest['date_published']}</li>
+          <li><strong>Offer ends:</strong> {latest.get('date_exp') or 'N/A'}</li>
+          <li><strong>Discount:</strong> {latest['discount_value']}</li>
           """
 
           if latest.get('scope'):
-              readme += f"**Scope:** {', '.join(latest['scope'])}  \n"
+              readme += f"<li><strong>Scope:</strong> {', '.join(latest['scope'])}</li>\n"
 
           if is_global:
-              readme += f"\n**Code:** {code}  \n"
+              readme += f"<li><strong>Code:</strong> {code}</li>\n"
           else:
-              readme += "\n**Note:** This deal has a limited-time campaign code. Visit the deal page to get the code and full terms.  \n"
+              readme += "<li><strong>Note:</strong> This deal has a limited-time campaign code. Visit the deal page to get the code and full terms.</li>\n"
 
-          readme += f"""
-          **Deal page:** {latest['post_url']}
+          readme += f"""<li><strong>Deal page:</strong> <a href="{latest['post_url']}">{latest['post_url']}</a></li>
+          </ul>
 
           ---
 
@@ -124,12 +125,19 @@ jobs:
 
           This repository tracks all historical deals for **{firm['name']}** published on PropFirmDiscount.com. Updated hourly via automated sync.
 
-          **Data source:** PropFirmDiscount.com  
-          **Prop firm profile:** {firm['url']}  
+          **Data source:** PropFirmDiscount.com
+          **Prop firm profile:** {firm['url']}
 
-          ---
+          ## Freshness
 
+          <!-- pfd-last-synced (auto-updated each sync) -->
           Last synced: {os.environ['STAMP']} (auto, hourly)
+
+          Deals are tracked continuously by the PropFirmDiscount team; this mirror syncs with the live API within an hour. Campaign codes come and go with each promotion; standing codes are re-verified yearly.
+
+          ## License
+
+          Data © PropFirmDiscount. May be referenced with attribution and a link to https://propfirmdiscount.com.
           """
 
           with open('README.md', 'w') as f:
