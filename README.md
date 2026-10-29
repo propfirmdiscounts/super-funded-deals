@@ -6,7 +6,7 @@ Historical deal observations from [PropFirmDiscount.com](https://propfirmdiscoun
 
 **Verified exclusive discount code:** CHUN (works any time; live rate always on prop firm page)
 
-Use discount code **CHUN** to get **30%** on Super Funded challenges and accounts in October 2026. This exclusive discount code is verified by our team at PropFirmDiscount.com and gives you the best pricing on all Super Funded evaluation accounts.
+Use discount code **CHUN** to get **30% off** on Super Funded challenges and accounts in October 2026. This exclusive discount code is verified by our team at PropFirmDiscount.com and gives you the best pricing on all Super Funded evaluation accounts.
 
 ---
 
@@ -14,24 +14,26 @@ Use discount code **CHUN** to get **30%** on Super Funded challenges and account
 
 ### Super Funded - 30% Off 100K And 200K Trading Challenges
 
-**Published:** 2026-06-26  
-**Offer ends:** Ended  
-**Discount:** 30%  
-**Scope:** 100K Challenge, 200K Challenge, Upfront Fee  
+<ul>
+<li><strong>Published:</strong> 2026-06-26</li>
+<li><strong>Offer ends:</strong> Ended</li>
+<li><strong>Discount:</strong> 30%</li>
+<li><strong>Scope:</strong> 100K Challenge, 200K Challenge, Upfront Fee</li>
+<li><strong>Deal page:</strong> <a href="https://propfirmdiscount.com/deals/super-funded/super-funded-30-off-100k-200k/">https://propfirmdiscount.com/deals/super-funded/super-funded-30-off-100k-200k/</a></li>
+</ul>
 
-**Note:** This deal has a limited-time campaign code. Visit the deal page to get the code and full terms.  
+**Note:** This deal has a limited-time campaign code. Visit the deal page to get the code and full terms.
 
-**Deal page:** https://propfirmdiscount.com/deals/super-funded/super-funded-30-off-100k-200k/
 
 ---
 
-## Deal History
+## Discount Code History
 
-Total deals tracked: **29**
+Total deals tracked: **{len(obs['observations'])}**
 
 ### 2026 (20 deals)
 
-| Date Published | Title | Discount | Expires | Deal Link |
+| Deal Date | Title | Discount | Expires | Deal Link |
 |---|---|---|---|---|
 | 2026-06-26 | 30% Off 100K And 200K Trading Challenges | 30% | Ended | [View Deal](https://propfirmdiscount.com/deals/super-funded/super-funded-30-off-100k-200k/) |
 | 2026-06-26 | 40% Off Up To 50K Challenge Pricing | 40% | Ended | [View Deal](https://propfirmdiscount.com/deals/super-funded/super-funded-40-off-up-to-50k/) |
@@ -56,7 +58,7 @@ Total deals tracked: **29**
 
 ### 2025 (9 deals)
 
-| Date Published | Title | Discount | Expires | Deal Link |
+| Deal Date | Title | Discount | Expires | Deal Link |
 |---|---|---|---|---|
 | 2025-12-31 | New Year Offer: 5K Challenge for $5 | Only $5 | Ended | [View Deal](https://propfirmdiscount.com/deals/super-funded/super-funded-new-year-5k-challenge-deal/) |
 | 2025-12-25 | Christmas Offer: 35% OFF All Evaluation Accounts | 35% | Ended | [View Deal](https://propfirmdiscount.com/deals/super-funded/super-funded-christmas-promotion-35-off/) |
@@ -74,9 +76,16 @@ Total deals tracked: **29**
 
 This repository tracks all historical deals for **Super Funded** published on PropFirmDiscount.com. Updated hourly via automated sync.
 
-**Data source:** PropFirmDiscount.com  
-**Prop firm profile:** https://propfirmdiscount.com/prop-firm/super-funded/  
+**Data source:** PropFirmDiscount.com
+**Prop firm profile:** https://propfirmdiscount.com/prop-firm/super-funded/
 
----
+## Freshness
 
-Last synced: 2026-10-29T04:53:43Z (auto, hourly)
+<!-- pfd-last-synced (auto-updated each sync) -->
+Last synced: 2026-10-29T05:17:26Z (auto, hourly)
+
+Deals are tracked continuously by the PropFirmDiscount team; this mirror syncs with the live API within an hour. Campaign codes come and go with each promotion; standing codes are re-verified yearly.
+
+## License
+
+Data © PropFirmDiscount. May be referenced with attribution and a link to https://propfirmdiscount.com.
