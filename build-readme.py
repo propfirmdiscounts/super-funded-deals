@@ -1,6 +1,6 @@
 import json, os
 
-obs = json.load(open('super-funded-obs.json'))
+obs = json.load(open('observations.json'))
 firm = obs['dealstore']
 latest = obs['observations'][0]
 
