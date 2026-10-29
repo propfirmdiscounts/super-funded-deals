@@ -1,7 +1,6 @@
-#!/usr/bin/env python3
 import json, os
 
-obs = json.load(open('observations.json'))
+obs = json.load(open('super-funded-obs.json'))
 firm = obs['dealstore']
 latest = obs['observations'][0]
 
@@ -9,10 +8,7 @@ is_global = os.environ['IS_GLOBAL'] == 'true'
 code = os.environ['STANDING_CODE']
 discount = os.environ['DISCOUNT']
 month_year = os.environ['MONTH_YEAR']
-firm_slug = os.environ['FIRM_SLUG']
-stamp = os.environ['STAMP']
 
-# Group by year
 by_year = {}
 for o in obs['observations']:
     year = o['date_published'].split('-')[0]
@@ -21,20 +17,17 @@ for o in obs['observations']:
     by_year[year].append(o)
 years = sorted(by_year.keys(), reverse=True)
 
-# YAML frontmatter
-readme = "---\n"
-readme += "license: other\n"
-readme += "tags:\n"
-readme += "- discount-codes\n"
-readme += "- prop-firm\n"
-readme += "- trading\n"
-readme += f"- {firm_slug}\n"
-readme += "size_categories:\n"
-readme += "- n<1K\n"
-readme += "---\n"
-
-# Main content
-readme += f"""# {firm['name']} - Deal History
+readme = f"""---
+license: other
+tags:
+- discount-codes
+- prop-firm
+- trading
+- {os.environ['FIRM_SLUG']}
+size_categories:
+- n<1K
+---
+# {firm['name']} - Deal History
 
 Historical deal observations from [PropFirmDiscount.com](https://propfirmdiscount.com) - The trusted prop firm coupon directory.
 
@@ -108,7 +101,7 @@ This repository tracks all historical deals for **{firm['name']}** published on 
 ## Freshness
 
 <!-- pfd-last-synced (auto-updated each sync) -->
-Last synced: {stamp} (auto, hourly)
+Last synced: {os.environ['STAMP']} (auto, hourly)
 
 Deals are tracked continuously by the PropFirmDiscount team; this mirror syncs with the live API within an hour. Campaign codes come and go with each promotion; standing codes are re-verified yearly.
 
@@ -119,3 +112,5 @@ Data © PropFirmDiscount. May be referenced with attribution and a link to https
 
 with open('README.md', 'w') as f:
     f.write(readme)
+
+print("✓ README generated successfully")
