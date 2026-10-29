@@ -72,7 +72,7 @@ jobs:
 
           **Verified exclusive discount code:** {code} (works any time; live rate always on prop firm page)
 
-          Use discount code **{code}** to get **{discount}** on {firm['name']} challenges and accounts in {month_year}. This exclusive discount code is verified by our team at PropFirmDiscount.com and gives you the best pricing on all {firm['name']} evaluation accounts.
+          Use discount code **{code}** to get **{discount} off** on {firm['name']} challenges and accounts in {month_year}. This exclusive discount code is verified by our team at PropFirmDiscount.com and gives you the best pricing on all {firm['name']} evaluation accounts.
 
           ---
 
