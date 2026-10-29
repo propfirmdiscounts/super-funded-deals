@@ -91,15 +91,19 @@ jobs:
 
           if is_global:
               readme += f"<li><strong>Code:</strong> {code}</li>\n"
-          else:
-              readme += "<li><strong>Note:</strong> This deal has a limited-time campaign code. Visit the deal page to get the code and full terms.</li>\n"
 
           readme += f"""<li><strong>Deal page:</strong> <a href="{latest['post_url']}">{latest['post_url']}</a></li>
           </ul>
+          """
+
+          if not is_global:
+              readme += "\n**Note:** This deal has a limited-time campaign code. Visit the deal page to get the code and full terms.\n"
+
+          readme += """
 
           ---
 
-          ## Deal History
+          ## Discount Code History
 
           Total deals tracked: **{len(obs['observations'])}**
 
