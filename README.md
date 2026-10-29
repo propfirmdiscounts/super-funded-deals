@@ -79,4 +79,4 @@ This repository tracks all historical deals for **Super Funded** published on Pr
 
 ---
 
-Last synced: 2026-10-29T06:18:32Z (auto, hourly)
+Last synced: 2026-10-29T06:33:24Z (auto, hourly)
