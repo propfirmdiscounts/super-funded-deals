@@ -92,7 +92,7 @@ This repository tracks all historical deals for **Super Funded** published on Pr
 ## Freshness
 
 <!-- pfd-last-synced (auto-updated each sync) -->
-Last synced: 2026-10-29T05:57:25Z (auto, hourly)
+Last synced: 2026-10-29T06:03:01Z (auto, hourly)
 
 Deals are tracked continuously by the PropFirmDiscount team; this mirror syncs with the live API within an hour. Campaign codes come and go with each promotion; standing codes are re-verified yearly.
 
