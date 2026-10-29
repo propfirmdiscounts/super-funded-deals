@@ -111,13 +111,13 @@ Use discount code **{code}** to get **{discount} off** on {firm['name']} challen
 
           readme += """
 
-          ---
+---
 
-          ## Discount Code History
+## Discount Code History
 
-          Total deals tracked: **{len(obs['observations'])}**
+Total deals tracked: **{len(obs['observations'])}**
 
-          """
+"""
 
           # Tables by year
           for year in years:
