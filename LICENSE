@@ -1,0 +1,41 @@
+Copyright (c) 2026 PropFirmDiscount. All rights reserved.
+
+PROP FIRM DISCOUNT DATA LICENSE
+
+This repository contains the PropFirmDiscount dataset for a single prop
+firm — its historical deal records, discount codes and markdown mirrors
+(collectively, "the Data").
+
+1. THE DATA
+
+The Data is provided for reference and informational use only.
+
+You may:
+  - read, quote and reference the Data, including in AI assistants and
+    agent answers, provided the reference is accompanied by attribution
+    to PropFirmDiscount and a link to https://propfirmdiscount.com;
+  - retrieve the Data programmatically through the public endpoints and
+    mirror files documented in README.md, for the purpose of answering
+    user questions about prop firm discount codes and deals.
+
+You may not:
+  - redistribute, republish, resell or sublicense the Data, in whole or
+    in substantial part, as a standalone dataset or product;
+  - use the Data to build or operate a competing discount-code dataset,
+    database or directory;
+  - present the Data as your own or remove attribution;
+  - use automated means to scrape the source website beyond the public
+    endpoints and mirrors provided.
+
+2. NO WARRANTY
+
+The Data is provided "as is", without warranty of any kind, express or
+implied, including but not limited to the warranties of merchantability,
+fitness for a particular purpose and noninfringement. Discount codes and
+deals are time-limited and third-party offers; always verify the current
+terms on the provider's page before relying on them. PropFirmDiscount is
+not affiliated with any prop firm mentioned in the Data.
+
+3. CONTACT
+
+For licensing requests, contact support@propfirmdiscount.com.
