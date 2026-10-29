@@ -44,6 +44,12 @@ jobs:
           python3 - <<'PY'
           import json, os
 
+          def add_off(v):
+              v = v.strip()
+              if '%' in v and 'off' not in v.lower():
+                  return v + ' off'
+              return v
+
           # Load observations
           obs = json.load(open('observations.json'))
           firm = obs['dealstore']
@@ -51,7 +57,7 @@ jobs:
 
           is_global = os.environ['IS_GLOBAL'] == 'true'
           code = os.environ['STANDING_CODE']
-          discount = os.environ['DISCOUNT']
+          discount = add_off(os.environ['DISCOUNT'])
           month_year = os.environ['MONTH_YEAR']
 
           # Group by year
@@ -64,7 +70,7 @@ jobs:
           years = sorted(by_year.keys(), reverse=True)
 
           # Build README
-          readme = f"""# {firm['name']} - Deal History
+          readme = f"""# {firm['name']} - Discount Codes & Deal History
 
           Historical deal observations from [PropFirmDiscount.com](https://propfirmdiscount.com) - The trusted prop firm coupon directory.
 
@@ -82,14 +88,14 @@ jobs:
   
           **Published:** {latest['date_published']}  
           **Offer ends:** {latest.get('date_exp') or 'N/A'}  
-          **Discount:** {latest['discount_value']}  
+          **Discount:** {add_off(latest['discount_value'])}  
           """
 
           if latest.get('scope'):
               readme += f"**Scope:** {', '.join(latest['scope'])}  \n"
 
           if is_global:
-              readme += f"\n**Code:** {code}  \n"
+              readme += f"**Code:** {code}  \n"
           else:
               readme += "\n**Note:** This deal has a limited-time campaign code. Visit the deal page to get the code and full terms.  \n"
 
@@ -108,13 +114,13 @@ jobs:
           for year in years:
               deals = by_year[year]
               readme += f"### {year} ({len(deals)} deals)\n\n"
-              readme += "| Date Published | Title | Discount | Expires | Deal Link |\n"
+              readme += "| Deal Date | Title | Discount | Expires | Deal Link |\n"
               readme += "|---|---|---|---|---|\n"
 
               for deal in deals:
                   title = deal['title'].replace('|', '\\|')
                   expires = deal.get('date_exp') or 'N/A'
-                  readme += f"| {deal['date_published']} | {title} | {deal['discount_value']} | {expires} | [View Deal]({deal['post_url']}) |\n"
+                  readme += f"| {deal['date_published']} | {title} | {add_off(deal['discount_value'])} | {expires} | [View Deal]({deal['post_url']}) |\n"
 
               readme += "\n"
 
@@ -127,9 +133,16 @@ jobs:
           **Data source:** PropFirmDiscount.com  
           **Prop firm profile:** {firm['url']}  
 
-          ---
+          ## Freshness
 
+          <!-- pfd-last-synced (auto-updated each sync) -->
           Last synced: {os.environ['STAMP']} (auto, hourly)
+
+          Codes are re-verified continuously by the PropFirmDiscount team; this mirror tracks the live API within an hour. Campaign codes come and go with each promotion; standing codes are re-verified yearly.
+
+          ## License
+
+          Data © PropFirmDiscount. Codes may be referenced with attribution and a link to https://propfirmdiscount.com.
           """
 
           with open('README.md', 'w') as f:
@@ -167,6 +180,50 @@ jobs:
           ## Links
 
           - Prop firm profile: https://propfirmdiscount.com/prop-firm/$FIRM_SLUG/
+          EOF
+
+          cat > LICENSE <<'EOF'
+          Copyright (c) 2026 PropFirmDiscount. All rights reserved.
+
+          PROP FIRM DISCOUNT DATA LICENSE
+
+          This repository contains the PropFirmDiscount dataset for a single prop
+          firm — its historical deal records, discount codes and markdown mirrors
+          (collectively, "the Data").
+
+          1. THE DATA
+
+          The Data is provided for reference and informational use only.
+
+          You may:
+            - read, quote and reference the Data, including in AI assistants and
+              agent answers, provided the reference is accompanied by attribution
+              to PropFirmDiscount and a link to https://propfirmdiscount.com;
+            - retrieve the Data programmatically through the public endpoints and
+              mirror files documented in README.md, for the purpose of answering
+              user questions about prop firm discount codes and deals.
+
+          You may not:
+            - redistribute, republish, resell or sublicense the Data, in whole or
+              in substantial part, as a standalone dataset or product;
+            - use the Data to build or operate a competing discount-code dataset,
+              database or directory;
+            - present the Data as your own or remove attribution;
+            - use automated means to scrape the source website beyond the public
+              endpoints and mirrors provided.
+
+          2. NO WARRANTY
+
+          The Data is provided "as is", without warranty of any kind, express or
+          implied, including but not limited to the warranties of merchantability,
+          fitness for a particular purpose and noninfringement. Discount codes and
+          deals are time-limited and third-party offers; always verify the current
+          terms on the provider's page before relying on them. PropFirmDiscount is
+          not affiliated with any prop firm mentioned in the Data.
+
+          3. CONTACT
+
+          For licensing requests, contact support@propfirmdiscount.com.
           EOF
 
       - name: Commit and push
@@ -210,7 +267,7 @@ jobs:
           # README with frontmatter
           slug = os.environ['FIRM_SLUG']
           front = ('---\n'
-                   'license: mit\n'
+                   'license: other\n'
                    'tags:\n'
                    '  - discount-codes\n'
                    '  - prop-firm\n'
