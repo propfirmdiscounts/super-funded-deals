@@ -45,7 +45,9 @@ jobs:
           import json, os
 
           def add_off(v):
-              v = v.strip()
+              v = (v or '').strip()
+              if not v:
+                  return 'N/A'
               if '%' in v and 'off' not in v.lower():
                   return v + ' off'
               return v
