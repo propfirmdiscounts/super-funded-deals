@@ -65,17 +65,21 @@ jobs:
 
           # Build README
           firm_slug = os.environ['FIRM_SLUG']
-          readme = f"""---
-license: other
-tags:
-- discount-codes
-- prop-firm
-- trading
-- {firm_slug}
-size_categories:
-- n<1K
----
-# {firm['name']} - Deal History
+
+          # YAML frontmatter
+          readme = "---\n"
+          readme += "license: other\n"
+          readme += "tags:\n"
+          readme += "- discount-codes\n"
+          readme += "- prop-firm\n"
+          readme += "- trading\n"
+          readme += f"- {firm_slug}\n"
+          readme += "size_categories:\n"
+          readme += "- n<1K\n"
+          readme += "---\n"
+
+          # Main content
+          readme += f"""# {firm['name']} - Deal History
 
 Historical deal observations from [PropFirmDiscount.com](https://propfirmdiscount.com) - The trusted prop firm coupon directory.
 
