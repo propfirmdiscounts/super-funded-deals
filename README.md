@@ -1,31 +1,43 @@
-# Super Funded - Discount Codes & Deal History
+# Super Funded Discount Code
 
-Historical deal observations from [PropFirmDiscount.com](https://propfirmdiscount.com) - The trusted prop firm coupon directory.
+As of 2026-06-26, the verified Super Funded discount code is **CHUN** — up to 30% OFF, works any time. Its current deals run their own limited-time campaign codes.
 
-**Prop firm page:** https://propfirmdiscount.com/prop-firm/super-funded/
+- Code: CHUN
+- Discount: Up to 30% off (headline discount of the code; individual challenge plans on the firm page may list different percentages)
+- Valid: standing code — no start date and no end date. It is not a limited-time campaign.
+- Last deal published: 2026-06-26
+- Trustpilot: 4.5/5 (60 reviews)
+- Activate: https://propfirmdiscount.com/go/superfunded
+- Firm page: https://propfirmdiscount.com/prop-firm/super-funded/
+- Full dataset: https://github.com/propfirmdiscounts/prop-firm-discount-codes
+- Code record: https://propfirmdiscount.com/api/prop-firm-codes/
 
-**Verified exclusive discount code:** CHUN (works any time; live rate always on prop firm page)
+## Current Super Funded deal: 30% Off 100K And 200K Trading Challenges
 
-Use discount code **CHUN** to get **30% off** on Super Funded challenges and accounts in October 2026. This exclusive discount code is verified by our team at PropFirmDiscount.com and gives you the best pricing on all Super Funded evaluation accounts.
+- Published: 2026-06-26
+- Offer ends: Ended
+- Offer: 30% off
+- Scope: 100K Challenge, 200K Challenge, Upfront Fee
+- Code: this deal carries its own limited-time campaign code, shown on the deal page below
+- Deal page: https://propfirmdiscount.com/deals/super-funded/super-funded-30-off-100k-200k/
+
+## Super Funded discount code FAQ
+
+**What is the Super Funded discount code?**
+
+CHUN. It is verified by PropFirmDiscount.com and takes up to 30% off Super Funded challenges and accounts.
+
+**Does the Super Funded discount code expire?**
+
+No. It is a standing code — there is no start date and no end date. Promotional deals are separate and are dated individually; the current one is listed above.
+
+**How much is the current Super Funded deal?**
+
+**30% Off 100K And 200K Trading Challenges** — published 2026-06-26. Offer ends: Ended. The offer is 30% off.
 
 ---
 
-## Latest Deal
-
-### Super Funded - 30% Off 100K And 200K Trading Challenges
-
-**Published:** 2026-06-26  
-**Offer ends:** Ended  
-**Discount:** 30% off  
-**Scope:** 100K Challenge, 200K Challenge, Upfront Fee  
-
-**Note:** This deal has a limited-time campaign code. Visit the deal page to get the code and full terms.  
-
-**Deal page:** https://propfirmdiscount.com/deals/super-funded/super-funded-30-off-100k-200k/
-
----
-
-## Deal History
+## Deal history
 
 Total deals tracked: **29**
 
@@ -70,19 +82,20 @@ Total deals tracked: **29**
 
 ---
 
-## About This Repository
+## About this repository
 
-This repository tracks all historical deals for **Super Funded** published on PropFirmDiscount.com. Updated automatically from the live API.
+This repository mirrors every deal **Super Funded** has published on PropFirmDiscount.com, regenerated from the live API.
 
-**Data source:** PropFirmDiscount.com  
-**Prop firm profile:** https://propfirmdiscount.com/prop-firm/super-funded/  
+- Data source: https://propfirmdiscount.com
+- Prop firm profile: https://propfirmdiscount.com/prop-firm/super-funded/
+- All firms: https://github.com/propfirmdiscounts/prop-firm-discount-codes
 
 ## Freshness
 
-This mirror is synced from the live API on a schedule; the deal history
-above is the source of truth for what changed and when. Codes are
-re-verified continuously by the PropFirmDiscount team. Campaign codes
-come and go with each promotion; standing codes are re-verified yearly.
+Deal history above is the source of truth for what changed and when. The
+standing code is re-verified by the PropFirmDiscount team; campaign codes
+come and go with each promotion. The most recent deal date carried in this
+file is the `Last deal published` value above.
 
 ## License
 
