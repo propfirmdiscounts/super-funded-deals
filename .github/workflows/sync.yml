@@ -39,8 +39,8 @@ jobs:
             -o observations.json
           # The published dataset row for this firm. The README quotes its
           # discount rate, activation link and Trustpilot figures so the repo
-          # cannot drift from the firm page; the same row's
-          # last_deal_published is the date every other mirror prints.
+          # cannot drift from the firm page; the same row's last_deal carries
+          # the newest deal every other mirror prints.
           # A fetch failure leaves an empty array and the builder falls back
           # to the manifest values below.
           curl -sf --retry 3 --retry-delay 30 \
@@ -105,7 +105,8 @@ jobs:
           # A clock-derived value would make consecutive runs differ even when
           # nothing changed, defeating the "no changes" guard in Commit and
           # push and committing an empty diff back to 51 repos on a schedule.
-          last_deal = record.get('last_deal_published') or latest['date_published']
+          last_deal = ((record.get('last_deal') or {}).get('date_published')
+                       or latest['date_published'])
 
           # Group by year
           by_year = {}
@@ -156,7 +157,17 @@ jobs:
               readme += ('> ' + desc.replace('\n', '\n> ') + '\n>\n'
                          f"> — {firm['name']}, in its own description on {source}\n\n")
 
-          readme += f"""- Code: {code}
+          if is_global:
+              # The code applies to every deal this firm runs, so the quoted
+              # rate is the newest percentage deal's — the same number the
+              # dataset row carries — not a separate "headline" figure.
+              readme += f"""- Code: {code}
+          - Discount: Up to {discount} (what the code takes off the firm's newest deal; it applies to every {firm['name']} deal, whatever form that deal is stated in)
+          - Valid: standing code — no start date and no end date. It is not a limited-time campaign.
+          - Last deal published: {last_deal}
+          """
+          else:
+              readme += f"""- Code: {code}
           - Discount: Up to {discount} (headline discount of the code; individual challenge plans on the firm page may list different percentages)
           - Valid: standing code — no start date and no end date. It is not a limited-time campaign.
           - Last deal published: {last_deal}
