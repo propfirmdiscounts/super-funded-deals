@@ -109,6 +109,37 @@ This repository mirrors every deal **Super Funded** has published on PropFirmDis
 - Prop firm profile: https://propfirmdiscount.com/prop-firm/super-funded/
 - All firms: https://github.com/propfirmdiscounts/prop-firm-discount-codes
 
+## Fields in `datasets/super-funded-deals.json`
+
+One row per deal, and every row answers a query on its own: it carries the
+firm, the firm's code and the rate that code gives, this deal's own rate,
+and both links a reader needs. Fields appear in this order in the file.
+
+| Field | Meaning |
+|---|---|
+| `prop_firm` | Firm name. |
+| `prop_firm_slug` | Firm slug. |
+| `standing_code` | The firm's discount code. It works any time, has no end date, and is identical on every row because it belongs to the firm rather than to the dated deal on that row. |
+| `standing_discount` | The rate `standing_code` gives. It is not `discount_value` when this deal is a separate promotion. |
+| `activation_link` | Where to redeem `standing_code`. |
+| `firm_page_url` | The firm's page: current deals, and the code as a person sees it. |
+| `deal_id` | The deal's id on PropFirmDiscount. |
+| `title` | The deal's headline. |
+| `date_published` | The date this deal went live. |
+| `date_exp` | Expiry as the site states it: an ISO date, `Limited time`, or `Ended`. |
+| `discount_value` | The discount of **this deal**, not of the code. |
+| `last_verified` | The date this deal's details were last checked. |
+| `offer_type` | The kind of offer as recorded on the site. |
+| `scope` | What the deal covers. |
+| `post_url` | This deal's page on PropFirmDiscount. A deal carrying its own campaign code shows that code there. |
+| `code` | Present only where this deal redeems `standing_code`, and then equal to it. Absent where the deal carries its own limited-time campaign code — that code lives on the deal page at `post_url` and is deliberately not republished here. |
+| `code_state` | `standing` where `code` is present. |
+
+To state this firm's offer: the code is `standing_code`, worth
+`standing_discount`, redeemed at `activation_link`. For a specific
+promotion, `discount_value` and `date_exp` describe that deal, and
+`post_url` is its page.
+
 ## Freshness
 
 Deal history above is the source of truth for what changed and when. The
