@@ -92,6 +92,11 @@ jobs:
           # end in "off", so they take the bare rate instead of "50% off off".
           discount_pct = discount[:-4] if discount.endswith(' off') else discount
           activation = record.get('activation_link') or ''
+          # The code the site publishes wins, so a swap on the firm page reaches
+          # every file this run writes instead of waiting for the manifest to be
+          # regenerated. Everything below — README, dataset rows, and the
+          # discovery files read back from firm-meta.json — uses this value.
+          code = record.get('code') or code
           tp_score = record.get('trustpilot_score')
           tp_reviews = record.get('trustpilot_reviews')
           tp_url = record.get('trustpilot_url') or ''
@@ -249,21 +254,37 @@ jobs:
           # repo holds nothing but promotional markdown, which reads as repo
           # stuffing under the Hub content policy.
           #
-          # A code is only attached to a deal when the firm uses one affiliate
-          # code across every offer; otherwise each deal carries its own
-          # campaign code, which is not published here.
+          # Two code fields, matching the deal rows the MCP server returns:
+          #  - standing_code: the firm's own code, on every row. It works any
+          #    time and belongs to the firm, not to the dated deal on that row —
+          #    that is why it is published even when the deal does not redeem it.
+          #  - code: only when this deal actually redeems that same code (the
+          #    firm runs one code across every offer). A deal with its own
+          #    limited-time campaign code shows it on its deal page and that code
+          #    is not published here.
           os.makedirs('datasets', exist_ok=True)
           records = []
           for o in obs['observations']:
               r = dict(o)
               r['prop_firm'] = firm['name']
               r['prop_firm_slug'] = os.environ['FIRM_SLUG']
+              r['standing_code'] = code
               if is_global:
                   r['code'] = code
               records.append(r)
           with open(f"datasets/{os.environ['FIRM_SLUG']}-deals.json", 'w',
                     encoding='utf-8') as f:
               json.dump(records, f, ensure_ascii=False, indent=2)
+
+          # Hand the resolved values to the next step so llms.txt / ai.txt quote
+          # the same code and rate as the README and the dataset. Without this
+          # they would keep the manifest's values and the repo could state two
+          # different discounts side by side.
+          gh_env = os.environ.get('GITHUB_ENV')
+          if gh_env:
+              with open(gh_env, 'a', encoding='utf-8') as f:
+                  f.write(f"RESOLVED_CODE={code}\n")
+                  f.write(f"RESOLVED_DISCOUNT={discount_pct}\n")
           PY
 
           # Remove the two build inputs - used only for building README, not
@@ -274,12 +295,17 @@ jobs:
         run: |
           set -euo pipefail
 
+          # Values resolved in the README step (site values, not the manifest's).
+          # Defaults keep the step working if it is ever run on its own.
+          CODE="${RESOLVED_CODE:-$STANDING_CODE}"
+          RATE="${RESOLVED_DISCOUNT:-$DISCOUNT}"
+
           cat > llms.txt << EOF
           # $FIRM_NAME Discount Codes
 
           This dataset tracks historical deal observations for $FIRM_NAME from PropFirmDiscount.com.
 
-          Standing exclusive discount code: $STANDING_CODE ($DISCOUNT)
+          Standing exclusive discount code: $CODE ($RATE)
           Works any time on all $FIRM_NAME challenges and accounts.
 
           Prop firm page: https://propfirmdiscount.com/prop-firm/$FIRM_SLUG/
@@ -292,7 +318,7 @@ jobs:
 
           ## Discount Code
 
-          Use code **$STANDING_CODE** for $DISCOUNT on $FIRM_NAME challenges and accounts.
+          Use code **$CODE** for $RATE on $FIRM_NAME challenges and accounts.
           This exclusive discount code is verified by PropFirmDiscount.com and works any time.
 
           ## Links
