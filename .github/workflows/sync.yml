@@ -235,6 +235,37 @@ jobs:
           - Prop firm profile: {firm['url']}
           - All firms: https://github.com/propfirmdiscounts/prop-firm-discount-codes
 
+          ## Fields in `datasets/{os.environ['FIRM_SLUG']}-deals.json`
+
+          One row per deal, and every row answers a query on its own: it carries the
+          firm, the firm's code and the rate that code gives, this deal's own rate,
+          and both links a reader needs. Fields appear in this order in the file.
+
+          | Field | Meaning |
+          |---|---|
+          | `prop_firm` | Firm name. |
+          | `prop_firm_slug` | Firm slug. |
+          | `standing_code` | The firm's discount code. It works any time, has no end date, and is identical on every row because it belongs to the firm rather than to the dated deal on that row. |
+          | `standing_discount` | The rate `standing_code` gives. It is not `discount_value` when this deal is a separate promotion. |
+          | `activation_link` | Where to redeem `standing_code`. |
+          | `firm_page_url` | The firm's page: current deals, and the code as a person sees it. |
+          | `deal_id` | The deal's id on PropFirmDiscount. |
+          | `title` | The deal's headline. |
+          | `date_published` | The date this deal went live. |
+          | `date_exp` | Expiry as the site states it: an ISO date, `Limited time`, or `Ended`. |
+          | `discount_value` | The discount of **this deal**, not of the code. |
+          | `last_verified` | The date this deal's details were last checked. |
+          | `offer_type` | The kind of offer as recorded on the site. |
+          | `scope` | What the deal covers. |
+          | `post_url` | This deal's page on PropFirmDiscount. A deal carrying its own campaign code shows that code there. |
+          | `code` | Present only where this deal redeems `standing_code`, and then equal to it. Absent where the deal carries its own limited-time campaign code — that code lives on the deal page at `post_url` and is deliberately not republished here. |
+          | `code_state` | `standing` where `code` is present. |
+
+          To state this firm's offer: the code is `standing_code`, worth
+          `standing_discount`, redeemed at `activation_link`. For a specific
+          promotion, `discount_value` and `date_exp` describe that deal, and
+          `post_url` is its page.
+
           ## Freshness
 
           Deal history above is the source of truth for what changed and when. The
@@ -262,15 +293,48 @@ jobs:
           #    firm runs one code across every offer). A deal with its own
           #    limited-time campaign code shows it on its deal page and that code
           #    is not published here.
+          # A deal with its own campaign code shows it on its deal page; that
+          # code is deliberately not republished here.
+          #
+          # Field order is deliberate. A reader that takes only the first lines
+          # of a row still gets identity, the standing code and its rate, and
+          # both links. Deal-specific detail follows, so a truncated read never
+          # leaves the code without the link that redeems it.
+          firm_page_url = record.get('archive_url') or firm['url']
           os.makedirs('datasets', exist_ok=True)
           records = []
           for o in obs['observations']:
-              r = dict(o)
-              r['prop_firm'] = firm['name']
-              r['prop_firm_slug'] = os.environ['FIRM_SLUG']
-              r['standing_code'] = code
+              r = {
+                  'prop_firm': firm['name'],
+                  'prop_firm_slug': os.environ['FIRM_SLUG'],
+                  'standing_code': code,
+                  # The rate the standing code itself gives, kept apart from
+                  # discount_value (this deal's own rate). Without it a reader
+                  # pairs the code with the deal's percentage - on this firm 45%
+                  # off one promotion is not the code's 50% - and states a
+                  # discount the code does not give.
+                  'standing_discount': discount_pct,
+                  'activation_link': activation,
+                  'firm_page_url': firm_page_url,
+                  'deal_id': o['deal_id'],
+                  'title': o['title'],
+                  'date_published': o['date_published'],
+                  'date_exp': o.get('date_exp'),
+                  'discount_value': o['discount_value'],
+                  'last_verified': o.get('last_verified'),
+                  'offer_type': o.get('offer_type'),
+                  'scope': o.get('scope'),
+                  'post_url': o['post_url'],
+              }
               if is_global:
+                  # On a global firm the deal redeems the firm's own code, so
+                  # both values are equal. Stated explicitly so a reader never
+                  # has to guess whether this is a second, limited-time code.
+                  # Non-global rows carry no code_state: whether their deal
+                  # needs a campaign code or no code at all cannot be known
+                  # from this data, and a guessed value is worse than none.
                   r['code'] = code
+                  r['code_state'] = 'standing'
               records.append(r)
           with open(f"datasets/{os.environ['FIRM_SLUG']}-deals.json", 'w',
                     encoding='utf-8') as f:
