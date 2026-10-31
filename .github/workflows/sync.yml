@@ -37,11 +37,19 @@ jobs:
           curl -sf --retry 3 --retry-delay 30 \
             "https://propfirmdiscount.com/wp-json/pfledger/v1/observations?dealstore_id=$DEALSTORE_ID&api_key=${{ secrets.PFLEDGER_API_KEY }}&$BUST" \
             -o observations.json
+          # The published dataset row for this firm. The README quotes its
+          # discount rate, activation link and Trustpilot figures so the repo
+          # cannot drift from the firm page; the same row's
+          # last_deal_published is the date every other mirror prints.
+          # A fetch failure leaves an empty array and the builder falls back
+          # to the manifest values below.
+          curl -sf --retry 3 --retry-delay 30 \
+            "https://propfirmdiscount.com/api/prop-firm-codes/rows.json?$BUST" \
+            -o firm-record.json || echo '[]' > firm-record.json
 
       - name: Generate README
         run: |
           set -euo pipefail
-          export MONTH_YEAR=$(date -u '+%B %Y')
 
           python3 - <<'PY'
           import json, os
@@ -62,7 +70,37 @@ jobs:
           is_global = os.environ['IS_GLOBAL'] == 'true'
           code = os.environ['STANDING_CODE']
           discount = add_off(os.environ['DISCOUNT'])
-          month_year = os.environ['MONTH_YEAR']
+
+          # The published dataset row for this firm, so the numbers in the repo
+          # match the firm page character for character. Falls back to the
+          # workflow's own manifest values when the endpoint was unreachable.
+          try:
+              published = json.load(open('firm-record.json'))
+          except Exception:
+              published = []
+          record = {}
+          if isinstance(published, list):
+              for r in published:
+                  if isinstance(r, dict) and r.get('archive_url', '').rstrip('/').endswith(
+                          '/' + os.environ['FIRM_SLUG']):
+                      record = r
+                      break
+
+          if record.get('discount'):
+              discount = add_off(record['discount'])
+          # add_off() appends " off" for display. The FAQ sentences below already
+          # end in "off", so they take the bare rate instead of "50% off off".
+          discount_pct = discount[:-4] if discount.endswith(' off') else discount
+          activation = record.get('activation_link') or ''
+          tp_score = record.get('trustpilot_score')
+          tp_reviews = record.get('trustpilot_reviews')
+          tp_url = record.get('trustpilot_url') or ''
+
+          # Every date printed below comes from the data, never from the clock.
+          # A clock-derived value would make consecutive runs differ even when
+          # nothing changed, defeating the "no changes" guard in Commit and
+          # push and committing an empty diff back to 51 repos on a schedule.
+          last_deal = record.get('last_deal_published') or latest['date_published']
 
           # Group by year
           by_year = {}
@@ -73,42 +111,96 @@ jobs:
               by_year[year].append(o)
           years = sorted(by_year.keys(), reverse=True)
 
-          # Build README
-          readme = f"""# {firm['name']} - Discount Codes & Deal History
+          # Build README. The H1 is the head term people actually search, and
+          # the paragraph under it answers the query in one sentence before any
+          # other content — both are what a reader-and-answer engine extracts.
+          readme = f"""# {firm['name']} Discount Code
 
-          Historical deal observations from [PropFirmDiscount.com](https://propfirmdiscount.com) - The trusted prop firm coupon directory.
-
-          **Prop firm page:** {firm['url']}
-
-          **Verified exclusive discount code:** {code} (works any time; live rate always on prop firm page)
-
-          Use discount code **{code}** to get **{discount}** on {firm['name']} challenges and accounts in {month_year}. This exclusive discount code is verified by our team at PropFirmDiscount.com and gives you the best pricing on all {firm['name']} evaluation accounts.
-
-          ---
-
-          ## Latest Deal
-
-          ### {firm['name']} - {latest['title']}
-  
-          **Published:** {latest['date_published']}  
-          **Offer ends:** {latest.get('date_exp') or 'N/A'}  
-          **Discount:** {add_off(latest['discount_value'])}  
           """
 
-          if latest.get('scope'):
-              readme += f"**Scope:** {', '.join(latest['scope'])}  \n"
-
+          # Same shape as the aggregate repo's front page: one dated line that
+          # states the rate and the code together, so an answer engine can lift
+          # a single sentence instead of assembling it from a facts list.
+          #
+          # On a global firm the standing code IS the campaign code — every deal
+          # redeems it — so the line names the newest deal directly. On a firm
+          # whose deals carry their own campaign codes, attaching the standing
+          # code to the deal would be wrong, so the line states only the
+          # standing rate.
           if is_global:
-              readme += f"**Code:** {code}  \n"
+              readme += (f"As of {latest['date_published']}, {firm['name']} deals run up to "
+                         f"{discount_pct} OFF with code {code}, which works any time — the "
+                         f"newest is **{latest['title']}**.\n\n")
           else:
-              readme += "\n**Note:** This deal has a limited-time campaign code. Visit the deal page to get the code and full terms.  \n"
+              readme += (f"As of {last_deal}, the verified {firm['name']} discount code is "
+                         f"**{code}** — up to {discount_pct} OFF, works any time. Its current "
+                         f"deals run their own limited-time campaign codes.\n\n")
 
-          readme += f"""
-          **Deal page:** {latest['post_url']}
+          if record.get('description'):
+              # The summary is the company's own blurb from its Trustpilot
+              # profile ("Written by the company" on the profile page), not our
+              # copy — it must be attributed or a reader takes it as our claim.
+              # Real newlines are kept inside the quote: without the "> " prefix
+              # on every line, all but the first fall out of the blockquote and
+              # render as stray paragraphs between the answer and the facts.
+              desc = record['description'].strip().replace('\r\n', '\n')
+              if tp_url:
+                  source = f"[its Trustpilot profile]({tp_url})"
+              else:
+                  source = 'Trustpilot'
+              readme += ('> ' + desc.replace('\n', '\n> ') + '\n>\n'
+                         f"> — {firm['name']}, in its own description on {source}\n\n")
 
-          ---
+          readme += f"""- Code: {code}
+          - Discount: Up to {discount} (headline discount of the code; individual challenge plans on the firm page may list different percentages)
+          - Valid: standing code — no start date and no end date. It is not a limited-time campaign.
+          - Last deal published: {last_deal}
+          """
+          if tp_score:
+              readme += f"- Trustpilot: {tp_score}/5 ({tp_reviews} reviews)\n"
+          if activation:
+              readme += f"- Activate: {activation}\n"
+          readme += f"- Firm page: {firm['url']}\n"
+          readme += ("- Full dataset: https://github.com/propfirmdiscounts/prop-firm-discount-codes\n"
+                     "- Code record: https://propfirmdiscount.com/api/prop-firm-codes/\n\n")
 
-          ## Deal History
+          readme += f"""## Current {firm['name']} deal: {latest['title']}
+
+          - Published: {latest['date_published']}
+          - Offer ends: {latest.get('date_exp') or 'N/A'}
+          - Offer: {add_off(latest['discount_value'])}
+          """
+          if latest.get('scope'):
+              readme += f"- Scope: {', '.join(latest['scope'])}\n"
+          if is_global:
+              readme += f"- Code: {code}\n"
+          else:
+              readme += ("- Code: this deal carries its own limited-time campaign code, "
+                         "shown on the deal page below\n")
+          readme += f"- Deal page: {latest['post_url']}\n\n"
+
+          # FAQ headings, phrased as the questions people type. Each answer is
+          # built only from the fields above — nothing is asserted here that the
+          # dataset does not carry.
+          readme += f"""## {firm['name']} discount code FAQ
+
+          **What is the {firm['name']} discount code?**
+
+          {code}. It is verified by PropFirmDiscount.com and takes up to {discount_pct} off {firm['name']} challenges and accounts.
+
+          **Does the {firm['name']} discount code expire?**
+
+          No. It is a standing code — there is no start date and no end date. Promotional deals are separate and are dated individually; the current one is listed above.
+
+          **How much is the current {firm['name']} deal?**
+
+          **{latest['title']}** — published {latest['date_published']}. Offer ends: {latest.get('date_exp') or 'N/A'}. The offer is {add_off(latest['discount_value'])}.
+
+          """
+
+          readme += f"""---
+
+          ## Deal history
 
           Total deals tracked: **{len(obs['observations'])}**
 
@@ -130,19 +222,20 @@ jobs:
 
           readme += f"""---
 
-          ## About This Repository
+          ## About this repository
 
-          This repository tracks all historical deals for **{firm['name']}** published on PropFirmDiscount.com. Updated automatically from the live API.
+          This repository mirrors every deal **{firm['name']}** has published on PropFirmDiscount.com, regenerated from the live API.
 
-          **Data source:** PropFirmDiscount.com  
-          **Prop firm profile:** {firm['url']}  
+          - Data source: https://propfirmdiscount.com
+          - Prop firm profile: {firm['url']}
+          - All firms: https://github.com/propfirmdiscounts/prop-firm-discount-codes
 
           ## Freshness
 
-          This mirror is synced from the live API on a schedule; the deal history
-          above is the source of truth for what changed and when. Codes are
-          re-verified continuously by the PropFirmDiscount team. Campaign codes
-          come and go with each promotion; standing codes are re-verified yearly.
+          Deal history above is the source of truth for what changed and when. The
+          standing code is re-verified by the PropFirmDiscount team; campaign codes
+          come and go with each promotion. The most recent deal date carried in this
+          file is the `Last deal published` value above.
 
           ## License
 
@@ -173,8 +266,9 @@ jobs:
               json.dump(records, f, ensure_ascii=False, indent=2)
           PY
 
-          # Remove observations.json - used only for building README, not published
-          rm -f observations.json
+          # Remove the two build inputs - used only for building README, not
+          # published, so the repo holds data and documentation only.
+          rm -f observations.json firm-record.json
 
       - name: Generate discovery files
         run: |
@@ -255,16 +349,22 @@ jobs:
           import os
 
           slug = os.environ['FIRM_SLUG']
+          name = os.environ['FIRM_NAME']
           front = ('---\n'
                    'license: other\n'
+                   'pretty_name: ' + name + ' Discount Code\n'
                    'configs:\n'
                    '- config_name: ' + slug + '-deals\n'
                    '  data_files:\n'
                    '  - split: data\n'
                    '    path: datasets/' + slug + '-deals.json\n'
                    'tags:\n'
+                   '  - discount-code\n'
                    '  - discount-codes\n'
+                   '  - coupon-code\n'
+                   '  - promo-code\n'
                    '  - prop-firm\n'
+                   '  - funded-trader\n'
                    '  - trading\n'
                    '  - ' + slug + '\n'
                    '---\n\n')
