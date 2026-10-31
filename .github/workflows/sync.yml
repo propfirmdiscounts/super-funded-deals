@@ -186,6 +186,8 @@ jobs:
           - Offer ends: {latest.get('date_exp') or 'N/A'}
           - Offer: {add_off(latest['discount_value'])}
           """
+          if latest.get('event'):
+              readme += f"- Event: {latest['event']}\n"
           if latest.get('scope'):
               readme += f"- Scope: {', '.join(latest['scope'])}\n"
           if is_global:
@@ -226,13 +228,14 @@ jobs:
           for year in years:
               deals = by_year[year]
               readme += f"### {year} ({len(deals)} deals)\n\n"
-              readme += "| Deal Date | Title | Discount | Expires | Deal Link |\n"
-              readme += "|---|---|---|---|---|\n"
+              readme += "| Deal Date | Title | Discount | Expires | Event | Deal Link |\n"
+              readme += "|---|---|---|---|---|---|\n"
 
               for deal in deals:
                   title = deal['title'].replace('|', '\\|')
                   expires = deal.get('date_exp') or 'N/A'
-                  readme += f"| {deal['date_published']} | {title} | {add_off(deal['discount_value'])} | {expires} | [View Deal]({deal['post_url']}) |\n"
+                  event = deal.get('event') or '—'
+                  readme += f"| {deal['date_published']} | {title} | {add_off(deal['discount_value'])} | {expires} | {event} | [View Deal]({deal['post_url']}) |\n"
 
               readme += "\n"
 
@@ -261,6 +264,7 @@ jobs:
           | `scope` | What the deal covers. |
           | `date_published` | The date this deal went live. |
           | `date_exp` | Expiry as the site states it: an ISO date, `Limited time`, or `Ended`. |
+          | `event` | The seasonal campaign this deal was tagged with on the site (`Halloween`, `Black Friday`), or `null` when it belongs to no event. The event never changes what the deal is worth — it names the occasion the deal was run for. |
           | `last_verified` | The date this deal's details were last checked. |
           | `post_url` | This deal's page on PropFirmDiscount. A deal carrying its own campaign code shows that code there. |
           | `prop_firm` | Firm name. |
