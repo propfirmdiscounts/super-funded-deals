@@ -478,7 +478,7 @@ jobs:
           from huggingface_hub import HfApi, CommitOperationAdd
 
           api = HfApi(token=os.environ['HF_TOKEN'])
-          repo_id = f"propfirmdiscounts/{os.environ['FIRM_SLUG']}-deals"
+          repo_id = f"propfirmdiscount/{os.environ['FIRM_SLUG']}-deals"
 
           # Surface a missing dataset repo as a warning annotation instead of
           # passing silently, while leaving the GitHub mirror step unaffected.
