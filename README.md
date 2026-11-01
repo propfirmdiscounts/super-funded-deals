@@ -1,6 +1,6 @@
 # Super Funded Discount Code
 
-As of 2026-06-26, the verified Super Funded discount code is **CHUN** — up to 30% OFF, works any time. Its current deals run their own limited-time campaign codes.
+As of 2026-06-26, the verified Super Funded discount code is CHUN — up to 30% OFF, works any time. Its current deals run their own limited-time campaign codes.
 
 - Code: CHUN
 - Discount: Up to 30% off (headline discount of the code; individual challenge plans on the firm page may list different percentages)
