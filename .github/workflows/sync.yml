@@ -136,10 +136,10 @@ jobs:
           if is_global:
               readme += (f"As of {latest['date_published']}, {firm['name']} deals run up to "
                          f"{discount_pct} OFF with code {code}, which works any time — the "
-                         f"newest is **{latest['title']}**.\n\n")
+                         f"newest is {latest['title']}.\n\n")
           else:
               readme += (f"As of {last_deal}, the verified {firm['name']} discount code is "
-                         f"**{code}** — up to {discount_pct} OFF, works any time. Its current "
+                         f"{code} — up to {discount_pct} OFF, works any time. Its current "
                          f"deals run their own limited-time campaign codes.\n\n")
 
           if record.get('description'):
@@ -387,7 +387,7 @@ jobs:
 
           ## Discount Code
 
-          Use code **$CODE** for $RATE on $FIRM_NAME challenges and accounts.
+          Use code $CODE for $RATE on $FIRM_NAME challenges and accounts.
           This exclusive discount code is verified by PropFirmDiscount.com and works any time.
 
           ## Links
