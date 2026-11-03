@@ -99,6 +99,11 @@ jobs:
           code = record.get('code') or code
           tp_score = record.get('trustpilot_score')
           tp_reviews = record.get('trustpilot_reviews')
+          tp_url = record.get('trustpilot_url') or ''
+          # The company's own blurb from its Trustpilot profile ("Written by
+          # the company" on the profile page). Empty for a firm Trustpilot
+          # carries no summary for, in which case the quote is left out.
+          description = (record.get('description') or '').strip()
 
           # Every date printed below comes from the data, never from the clock.
           # A clock-derived value would make consecutive runs differ even when
@@ -140,6 +145,19 @@ jobs:
               readme += (f"As of {last_deal}, the verified {firm['name']} discount code is "
                          f"{code} — up to {discount_pct} OFF, works any time. Its current "
                          f"deals run their own limited-time campaign codes.\n\n")
+
+          if description:
+              # The company's own words, not our copy — it must carry the
+              # attribution or a reader takes the claim as ours. Every line
+              # needs the "> " prefix: without it all but the first fall out
+              # of the blockquote and render as stray paragraphs between the
+              # answer and the facts.
+              if tp_url:
+                  source = f"[its Trustpilot profile]({tp_url})"
+              else:
+                  source = 'Trustpilot'
+              readme += ('> ' + description.replace('\n', '\n> ') + '\n>\n'
+                         f"> — {firm['name']}, in its own description on {source}\n\n")
 
           if is_global:
               # The code applies to every deal this firm runs, so the quoted
