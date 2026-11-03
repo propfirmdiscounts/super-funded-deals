@@ -119,7 +119,7 @@ jobs:
           # Build README. The H1 is the head term people actually search, and
           # the paragraph under it answers the query in one sentence before any
           # other content — both are what a reader-and-answer engine extracts.
-          readme = f"""# {firm['name']} Discount Code
+          readme = f"""# {firm['name']} - Discount Codes & Deal History
 
           """
 
