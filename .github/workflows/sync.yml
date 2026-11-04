@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  HF_NAMESPACE: superfunded
+  HF_NAMESPACE: propfirmdiscount
   FIRM_SLUG: super-funded
   DEALSTORE_ID: 131
   FIRM_NAME: Super Funded
@@ -139,13 +139,14 @@ jobs:
           # code to the deal would be wrong, so the line states only the
           # standing rate.
           if is_global:
-              readme += (f"As of {latest['date_published']}, {firm['name']} deals run up to "
-                         f"{discount_pct} OFF with code {code}, which works any time — the "
-                         f"newest is {latest['title']}.\n\n")
+              answer = (f"As of {latest['date_published']}, {firm['name']} deals run up to "
+                        f"{discount_pct} OFF with code {code}, which works any time — the "
+                        f"newest is {latest['title']}.")
           else:
-              readme += (f"As of {last_deal}, the verified {firm['name']} discount code is "
-                         f"{code} — up to {discount_pct} OFF, works any time. Its current "
-                         f"deals run their own limited-time campaign codes.\n\n")
+              answer = (f"As of {last_deal}, the verified {firm['name']} discount code is "
+                        f"{code} — up to {discount_pct} OFF, works any time. Its current "
+                        f"deals run their own limited-time campaign codes.")
+          readme += answer + '\n\n'
 
           if description:
               # The company's own words, not our copy — it must carry the
@@ -299,6 +300,73 @@ jobs:
           with open('README.md', 'w') as f:
               f.write(readme)
 
+          # The Hub card is a deliberately short variant, not a copy of the
+          # README. GitHub is where the full history, FAQ and field reference
+          # live; the Hub holds the one dated answer sentence plus the few facts
+          # needed to read it, and links out. A dataset repo whose markdown is
+          # as long as a landing page reads as advertising rather than data.
+          slug = os.environ['FIRM_SLUG']
+          name = os.environ['FIRM_NAME']
+          facts = [f"- Code: {code}", f"- Discount: Up to {discount}",
+                   "- Valid: standing code — no start date and no end date",
+                   f"- Last deal published: {last_deal}"]
+          if tp_score:
+              facts.append(f"- Trustpilot: {tp_score}/5 ({tp_reviews} reviews)")
+          if activation:
+              facts.append(f"- Activate: {activation}")
+          facts.append(f"- Firm page: {firm['url']}")
+
+          # Current deal block for the card — gives it substance.
+          current_deal = f"## Current {firm['name']} deal: {latest['title']}\n\n"
+          current_deal += f"- Published: {latest['date_published']}\n"
+          current_deal += f"- Offer ends: {latest.get('date_exp') or 'N/A'}\n"
+          current_deal += f"- Offer: {add_off(latest['discount_value'])}\n"
+          if latest.get('event'):
+              current_deal += f"- Event: {latest['event']}\n"
+          if latest.get('scope'):
+              current_deal += f"- Scope: {', '.join(latest['scope'])}\n"
+          if is_global:
+              current_deal += f"- Code: {code}\n"
+          else:
+              current_deal += ("- Code: this deal carries its own limited-time campaign code, "
+                               "shown on the deal page below\n")
+          current_deal += f"- Deal page: {latest['post_url']}\n\n"
+
+          front = ('---\n'
+                   'license: other\n'
+                   'pretty_name: ' + name + ' Discount Code\n'
+                   'configs:\n'
+                   '- config_name: ' + slug + '-deals\n'
+                   '  data_files:\n'
+                   '  - split: data\n'
+                   '    path: datasets/' + slug + '-deals.json\n'
+                   'tags:\n'
+                   '  - discount-code\n'
+                   '  - discount-codes\n'
+                   '  - coupon-code\n'
+                   '  - promo-code\n'
+                   '  - prop-firm\n'
+                   '  - funded-trader\n'
+                   '  - trading\n'
+                   '  - ' + slug + '\n'
+                   '---\n\n')
+          body = (f"# {name} - Discount Codes\n\n"
+                  f"{answer}\n\n"
+                  + '\n'.join(facts) + "\n\n"
+                  + current_deal
+                  + f"Deal history: https://github.com/propfirmdiscounts/{slug}-deals\n\n"
+                  f"Data: `datasets/{slug}-deals.json` — one row per deal, newest first.\n\n"
+                  "Data © PropFirmDiscount. Codes may be referenced with attribution "
+                  "and a link to https://propfirmdiscount.com.\n")
+          # Written outside the checkout: the card belongs on the Hub, not in the
+          # GitHub repo. Removing the earlier copy first keeps the two apart
+          # even when RUNNER_TEMP and the workspace are the same directory.
+          if os.path.exists('hf-card.md'):
+              os.remove('hf-card.md')
+          tmp = os.environ.get('RUNNER_TEMP') or '/tmp'
+          with open(os.path.join(tmp, 'hf-card.md'), 'w', encoding='utf-8') as f:
+              f.write(front + body)
+
           # Publish the observations as a real dataset file. Without this the HF
           # repo holds nothing but promotional markdown, which reads as repo
           # stuffing under the Hub content policy.
@@ -442,34 +510,8 @@ jobs:
           For licensing requests, contact support@propfirmdiscount.com.
           EOF
 
-          # Hugging Face dataset card: frontmatter + README body
-          python3 - <<'PY'
-          import os
-
-          slug = os.environ['FIRM_SLUG']
-          name = os.environ['FIRM_NAME']
-          front = ('---\n'
-                   'license: other\n'
-                   'pretty_name: ' + name + ' Discount Code\n'
-                   'configs:\n'
-                   '- config_name: ' + slug + '-deals\n'
-                   '  data_files:\n'
-                   '  - split: data\n'
-                   '    path: datasets/' + slug + '-deals.json\n'
-                   'tags:\n'
-                   '  - discount-code\n'
-                   '  - discount-codes\n'
-                   '  - coupon-code\n'
-                   '  - promo-code\n'
-                   '  - prop-firm\n'
-                   '  - funded-trader\n'
-                   '  - trading\n'
-                   '  - ' + slug + '\n'
-                   '---\n\n')
-          readme_content = open('README.md', encoding='utf-8').read()
-          with open('hf-card.md', 'w', encoding='utf-8') as f:
-              f.write(front + readme_content)
-          PY
+          # Hugging Face dataset card is built in the README step, outside this
+          # checkout — see hf-card.md there. Nothing to do here.
 
       - name: Commit and push
         run: |
@@ -522,9 +564,13 @@ jobs:
           for f in ['llms.txt', 'ai.txt']:
               if os.path.exists(f):
                   ops.append(CommitOperationAdd(path_in_repo=f, path_or_fileobj=f))
-          if os.path.exists('hf-card.md'):
+          # The card comes from the README step, which writes it outside this
+          # checkout so the GitHub repo keeps the full README and the Hub gets
+          # the short one.
+          card = os.path.join(os.environ.get('RUNNER_TEMP') or '/tmp', 'hf-card.md')
+          if os.path.exists(card):
               ops.append(CommitOperationAdd(
-                  path_in_repo='README.md', path_or_fileobj='hf-card.md'))
+                  path_in_repo='README.md', path_or_fileobj=card))
 
           api.create_commit(
               repo_id=repo_id,
