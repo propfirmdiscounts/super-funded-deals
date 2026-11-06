@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  HF_NAMESPACE: superfunded
+  HF_NAMESPACE: prop-firm
   FIRM_SLUG: super-funded
   DEALSTORE_ID: 131
   FIRM_NAME: Super Funded
