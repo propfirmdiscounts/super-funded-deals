@@ -16,8 +16,8 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  HF_NAMESPACE: prop-firm
-  HF_REPO_NAME: super-funded-discount-codes
+  HF_NAMESPACE: superfunded
+  HF_REPO_NAME: super-funded-deals
   FIRM_SLUG: super-funded
   DEALSTORE_ID: 131
   FIRM_NAME: Super Funded
