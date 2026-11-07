@@ -17,7 +17,6 @@ concurrency:
 
 env:
   HF_NAMESPACE: superfunded
-  HF_REPO_NAME: super-funded-deals
   FIRM_SLUG: super-funded
   DEALSTORE_ID: 131
   FIRM_NAME: Super Funded
@@ -540,7 +539,7 @@ jobs:
           from huggingface_hub import HfApi, CommitOperationAdd
 
           api = HfApi(token=os.environ['HF_TOKEN'])
-          repo_id = f"{os.environ['HF_NAMESPACE']}/{os.environ['HF_REPO_NAME']}"
+          repo_id = f"{os.environ['HF_NAMESPACE']}/{os.environ['FIRM_SLUG']}-deals"
 
           # Surface a missing dataset repo as a warning annotation instead of
           # passing silently, while leaving the GitHub mirror step unaffected.
