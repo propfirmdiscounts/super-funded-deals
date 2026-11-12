@@ -528,6 +528,7 @@ jobs:
           git push
 
       - name: Push Hugging Face mirror
+        continue-on-error: true
         if: env.HF_TOKEN != ''
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
@@ -541,12 +542,12 @@ jobs:
           api = HfApi(token=os.environ['HF_TOKEN'])
           repo_id = f"{os.environ['HF_NAMESPACE']}/{os.environ['FIRM_SLUG']}-deals"
 
-          # Surface a missing dataset repo as a warning annotation instead of
-          # passing silently, while leaving the GitHub mirror step unaffected.
+          # Surface an inaccessible or missing dataset repo as a warning
+          # annotation instead of failing the GitHub sync job.
           try:
               api.repo_info(repo_id=repo_id, repo_type='dataset')
-          except Exception:
-              print(f"::warning::HF dataset {repo_id} does not exist - skipping upload")
+          except Exception as e:
+              print(f"::warning::HF dataset {repo_id} skipped ({e})")
               raise SystemExit(0)
 
           # One commit for the whole mirror. Uploading the folder and then each
