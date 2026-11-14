@@ -67,6 +67,7 @@ jobs:
           obs = json.load(open('observations.json'))
           firm = obs['dealstore']
           latest = obs['observations'][0]
+          raw_newest_title = (latest.get('title') or '').strip().rstrip('.')
 
           is_global = os.environ['IS_GLOBAL'] == 'true'
           code = os.environ['STANDING_CODE']
@@ -106,6 +107,15 @@ jobs:
           # carries no summary for, in which case the quote is left out.
           description = (record.get('description') or '').strip()
 
+          # For global firms, append " with code {code}" to all deal titles
+          if is_global and code:
+              suffix = f" with code {code}"
+              for o in obs['observations']:
+                  t = (o.get('title') or '').strip().rstrip('.')
+                  if t and not t.lower().endswith(suffix.lower()):
+                      o['title'] = t + suffix
+              latest = obs['observations'][0]
+
           # Every date printed below comes from the data, never from the clock.
           # A clock-derived value would make consecutive runs differ even when
           # nothing changed, defeating the "no changes" guard in Commit and
@@ -138,13 +148,15 @@ jobs:
           # whose deals carry their own campaign codes, attaching the standing
           # code to the deal would be wrong, so the line states only the
           # standing rate.
+          from datetime import datetime, timezone
+          now_month = datetime.now(timezone.utc).strftime('%Y-%m')
           if is_global:
-              answer = (f"As of {latest['date_published']}, {firm['name']} deals run up to "
+              answer = (f"As of {now_month}, {firm['name']} deals run "
                         f"{discount_pct} OFF with code {code}, which works any time — the "
-                        f"newest is {latest['title']}.")
+                        f"newest is {raw_newest_title}.")
           else:
-              answer = (f"As of {last_deal}, the verified {firm['name']} discount code is "
-                        f"{code} — up to {discount_pct} OFF, works any time. Its current "
+              answer = (f"As of {now_month}, the verified {firm['name']} discount code is "
+                        f"{code} — {discount_pct} OFF, works any time. Its current "
                         f"deals run their own limited-time campaign codes.")
           readme += answer + '\n\n'
 
@@ -166,13 +178,13 @@ jobs:
               # rate is the newest percentage deal's — the same number the
               # dataset row carries — not a separate "headline" figure.
               readme += f"""- Code: {code}
-          - Discount: Up to {discount} (what the code takes off the firm's newest deal; it applies to every {firm['name']} deal, whatever form that deal is stated in)
+          - Discount: {discount} (what the code takes off the firm's newest deal; it applies to every {firm['name']} deal, whatever form that deal is stated in)
           - Valid: standing code — no start date and no end date. It is not a limited-time campaign.
           - Last deal published: {last_deal}
           """
           else:
               readme += f"""- Code: {code}
-          - Discount: Up to {discount} (headline discount of the code; individual challenge plans on the firm page may list different percentages)
+          - Discount: {discount} (headline discount of the code; individual challenge plans on the firm page may list different percentages)
           - Valid: standing code — no start date and no end date. It is not a limited-time campaign.
           - Last deal published: {last_deal}
           """
@@ -208,7 +220,7 @@ jobs:
 
           **What is the {firm['name']} discount code?**
 
-          {code}. It is verified by PropFirmDiscount.com and takes up to {discount_pct} off {firm['name']} challenges and accounts.
+          {code}. It is verified by PropFirmDiscount.com and takes {discount_pct} off {firm['name']} challenges and accounts.
 
           **Does the {firm['name']} discount code expire?**
 
@@ -237,6 +249,9 @@ jobs:
 
               for deal in deals:
                   title = deal['title'].replace('|', '\\|')
+                  prefix = f"{firm['name']}: "
+                  if not title.startswith(prefix):
+                      title = f"{prefix}{title}"
                   expires = deal.get('date_exp') or 'N/A'
                   event = deal.get('event') or '—'
                   readme += f"| {deal['date_published']} | {title} | {add_off(deal['discount_value'])} | {expires} | {event} | [View Deal]({deal['post_url']}) |\n"
@@ -307,7 +322,7 @@ jobs:
           # as long as a landing page reads as advertising rather than data.
           slug = os.environ['FIRM_SLUG']
           name = os.environ['FIRM_NAME']
-          facts = [f"- Code: {code}", f"- Discount: Up to {discount}",
+          facts = [f"- Code: {code}", f"- Discount: {discount}",
                    "- Valid: standing code — no start date and no end date",
                    f"- Last deal published: {last_deal}"]
           if tp_score:
@@ -524,7 +539,8 @@ jobs:
             exit 0
           fi
           git commit -m "Sync $(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-            -m "Update $FIRM_NAME deal history and README"
+            -m "Update $FIRM_NAME deal history and README" \
+            -m "Co-Authored-By: propfirmdiscounts <73492456+propfirmdiscounts@users.noreply.github.com>"
           git push
 
       - name: Push Hugging Face mirror
