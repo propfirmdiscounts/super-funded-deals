@@ -7,10 +7,11 @@ As of 2026-11, the verified Super Funded discount code is CHUN — 30% OFF, work
 - Valid: standing code — no start date and no end date. It is not a limited-time campaign.
 - Last deal published: 2026-06-26
 - Trustpilot: 4.5/5 (60 reviews)
-- Activate: https://propfirmdiscount.com/go/superfunded
-- Firm page: https://propfirmdiscount.com/prop-firm/super-funded/
-- Full dataset: https://github.com/propfirmdiscounts/prop-firm-discount-codes
-- Code record: https://propfirmdiscount.com/api/prop-firm-codes/
+- GitHub repository: [https://github.com/propfirmdiscounts/super-funded-deals](https://github.com/propfirmdiscounts/super-funded-deals)
+- Activate: [https://propfirmdiscount.com/go/superfunded](https://propfirmdiscount.com/go/superfunded)
+- Firm page: [https://propfirmdiscount.com/prop-firm/super-funded/](https://propfirmdiscount.com/prop-firm/super-funded/)
+- Full dataset: [https://github.com/propfirmdiscounts/prop-firm-discount-codes](https://github.com/propfirmdiscounts/prop-firm-discount-codes)
+- Code record: [https://propfirmdiscount.com/api/prop-firm-codes/](https://propfirmdiscount.com/api/prop-firm-codes/)
 
 ## Current Super Funded deal: 30% Off 100K And 200K Trading Challenges
 
@@ -19,7 +20,7 @@ As of 2026-11, the verified Super Funded discount code is CHUN — 30% OFF, work
 - Offer: 30% off
 - Scope: 100K Challenge, 200K Challenge, Upfront Fee
 - Code: this deal carries its own limited-time campaign code, shown on the deal page below
-- Deal page: https://propfirmdiscount.com/deals/super-funded/super-funded-30-off-100k-200k/
+- Deal page: [https://propfirmdiscount.com/deals/super-funded/super-funded-30-off-100k-200k/](https://propfirmdiscount.com/deals/super-funded/super-funded-30-off-100k-200k/)
 
 ## Super Funded discount code FAQ
 
@@ -86,9 +87,9 @@ Total deals tracked: **29**
 
 This repository mirrors every deal **Super Funded** has published on PropFirmDiscount.com, regenerated from the live API.
 
-- Data source: https://propfirmdiscount.com
-- Prop firm profile: https://propfirmdiscount.com/prop-firm/super-funded/
-- All firms: https://github.com/propfirmdiscounts/prop-firm-discount-codes
+- Data source: [https://propfirmdiscount.com](https://propfirmdiscount.com)
+- Prop firm profile: [https://propfirmdiscount.com/prop-firm/super-funded/](https://propfirmdiscount.com/prop-firm/super-funded/)
+- All firms: [https://github.com/propfirmdiscounts/prop-firm-discount-codes](https://github.com/propfirmdiscounts/prop-firm-discount-codes)
 
 ## Fields in `datasets/super-funded-deals.json`
 

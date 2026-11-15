@@ -189,12 +189,17 @@ jobs:
           - Last deal published: {last_deal}
           """
           if tp_score:
-              readme += f"- Trustpilot: {tp_score}/5 ({tp_reviews} reviews)\n"
+              if tp_url:
+                  readme += f"- Trustpilot: [{tp_score}/5 ({tp_reviews} reviews)]({tp_url})\n"
+              else:
+                  readme += f"- Trustpilot: {tp_score}/5 ({tp_reviews} reviews)\n"
+          repo_url = f"https://github.com/propfirmdiscounts/{slug}-deals"
+          readme += f"- GitHub repository: [{repo_url}]({repo_url})\n"
           if activation:
-              readme += f"- Activate: {activation}\n"
-          readme += f"- Firm page: {firm['url']}\n"
-          readme += ("- Full dataset: https://github.com/propfirmdiscounts/prop-firm-discount-codes\n"
-                     "- Code record: https://propfirmdiscount.com/api/prop-firm-codes/\n\n")
+              readme += f"- Activate: [{activation}]({activation})\n"
+          readme += f"- Firm page: [{firm['url']}]({firm['url']})\n"
+          readme += ("- Full dataset: [https://github.com/propfirmdiscounts/prop-firm-discount-codes](https://github.com/propfirmdiscounts/prop-firm-discount-codes)\n"
+                     "- Code record: [https://propfirmdiscount.com/api/prop-firm-codes/](https://propfirmdiscount.com/api/prop-firm-codes/)\n\n")
 
           readme += f"""## Current {firm['name']} deal: {latest['title']}
 
@@ -211,7 +216,7 @@ jobs:
           else:
               readme += ("- Code: this deal carries its own limited-time campaign code, "
                          "shown on the deal page below\n")
-          readme += f"- Deal page: {latest['post_url']}\n\n"
+          readme += f"- Deal page: [{latest['post_url']}]({latest['post_url']})\n\n"
 
           # FAQ headings, phrased as the questions people type. Each answer is
           # built only from the fields above — nothing is asserted here that the
@@ -264,9 +269,9 @@ jobs:
 
           This repository mirrors every deal **{firm['name']}** has published on PropFirmDiscount.com, regenerated from the live API.
 
-          - Data source: https://propfirmdiscount.com
-          - Prop firm profile: {firm['url']}
-          - All firms: https://github.com/propfirmdiscounts/prop-firm-discount-codes
+          - Data source: [https://propfirmdiscount.com](https://propfirmdiscount.com)
+          - Prop firm profile: [{firm['url']}]({firm['url']})
+          - All firms: [https://github.com/propfirmdiscounts/prop-firm-discount-codes](https://github.com/propfirmdiscounts/prop-firm-discount-codes)
 
           ## Fields in `datasets/{os.environ['FIRM_SLUG']}-deals.json`
 
