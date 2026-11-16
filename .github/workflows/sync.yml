@@ -22,7 +22,7 @@ env:
   FIRM_NAME: Super Funded
   STANDING_CODE: CHUN
   DISCOUNT: 30%
-  IS_GLOBAL: false
+  IS_GLOBAL: 0
 
 jobs:
   sync:
@@ -65,7 +65,7 @@ jobs:
 
           slug = os.environ['FIRM_SLUG']
           firm_name = os.environ['FIRM_NAME']
-          is_global = os.environ['IS_GLOBAL'] == 'true'
+          is_global = os.environ.get('IS_GLOBAL', '0') in ['1', 'true', 'True']
           code = os.environ['STANDING_CODE']
           discount = add_off(os.environ['DISCOUNT'])
 
@@ -91,6 +91,8 @@ jobs:
 
           if record.get('discount'):
               discount = add_off(record['discount'])
+          if 'is_global' in record:
+              is_global = str(record['is_global']) in ['1', 'true', 'True']
           # add_off() appends " off" for display. The FAQ sentences below already
           # end in "off", so they take the bare rate instead of "50% off off".
           discount_pct = discount[:-4] if discount.endswith(' off') else discount
@@ -418,74 +420,74 @@ jobs:
               dataset_str = json.dumps(dataset_data, indent=4)
 
               layout_html = f'''<!DOCTYPE html>
-<html lang="{{{{ page.lang | default: site.lang | default: "en-US" }}}}">
-  <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{{{ page.title | default: site.title }}}}</title>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JRN9LT8NNF"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){{dataLayer.push(arguments);}}
-      gtag('js', new Date());
-
-      gtag('config', 'G-JRN9LT8NNF');
-    </script>
-    <!-- Favicon -->
-    <link rel="shortcut icon" type="image/x-icon" href="https://propfirmdiscounts.github.io/favicon.ico">
-    <link rel="icon" type="image/png" sizes="32x32" href="https://propfirmdiscounts.github.io/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="https://propfirmdiscounts.github.io/favicon-16x16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="https://propfirmdiscounts.github.io/apple-touch-icon.png">
-    <link rel="manifest" href="https://propfirmdiscounts.github.io/site.webmanifest">
-    {{% seo title=false %}}
-    <script type="application/ld+json">
-    {{
-      "@context": "https://schema.org",
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {{
-          "@type": "ListItem",
-          "position": 1,
-          "name": "Home",
-          "item": "https://propfirmdiscounts.github.io/"
-        }},
-        {{
-          "@type": "ListItem",
-          "position": 2,
-          "name": "Prop Firm Discount Codes, Deals & Data Directory",
-          "item": "https://propfirmdiscounts.github.io/prop-firm-discount-codes/"
-        }},
-        {{
-          "@type": "ListItem",
-          "position": 3,
-          "name": {{{{ page.title | default: site.title | jsonify }}}},
-          "item": "https://propfirmdiscounts.github.io/{slug}-deals/"
-        }}
-      ]
-    }}
-    </script>
-    <script type="application/ld+json">
-{faq_str}
-    </script>
-    <script type="application/ld+json">
-{dataset_str}
-    </script>
-    <link rel="stylesheet" href="{{{{ "/assets/css/style.css?v=" | append: site.github.build_revision | relative_url }}}}">
-    {{% include head-custom.html %}}
-  </head>
-  <body>
-    <div class="container-lg px-3 my-5 markdown-body">
-      <nav aria-label="Breadcrumb" style="font-size: 0.9em; margin-bottom: 1.5rem; color: #57606a;">
-        <a href="https://propfirmdiscounts.github.io/">Home</a> &rsaquo;
-        <a href="https://propfirmdiscounts.github.io/prop-firm-discount-codes/">Prop Firm Discount Codes, Deals &amp; Data Directory</a> &rsaquo;
-        <span style="color: #24292f; font-weight: 500;">{{{{ page.firm_name | default: page.title | default: site.title }}}}</span>
-      </nav>
-      {{{{ content }}}}
-    </div>
-  </body>
-</html>'''
+              <html lang="{{{{ page.lang | default: site.lang | default: "en-US" }}}}">
+                <head>
+                  <meta charset="UTF-8">
+                  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+                  <meta name="viewport" content="width=device-width, initial-scale=1">
+                  <title>{{{{ page.title | default: site.title }}}}</title>
+                  <!-- Google tag (gtag.js) -->
+                  <script async src="https://www.googletagmanager.com/gtag/js?id=G-JRN9LT8NNF"></script>
+                  <script>
+                    window.dataLayer = window.dataLayer || [];
+                    function gtag(){{dataLayer.push(arguments);}}
+                    gtag('js', new Date());
+              
+                    gtag('config', 'G-JRN9LT8NNF');
+                  </script>
+                  <!-- Favicon -->
+                  <link rel="shortcut icon" type="image/x-icon" href="https://propfirmdiscounts.github.io/favicon.ico">
+                  <link rel="icon" type="image/png" sizes="32x32" href="https://propfirmdiscounts.github.io/favicon-32x32.png">
+                  <link rel="icon" type="image/png" sizes="16x16" href="https://propfirmdiscounts.github.io/favicon-16x16.png">
+                  <link rel="apple-touch-icon" sizes="180x180" href="https://propfirmdiscounts.github.io/apple-touch-icon.png">
+                  <link rel="manifest" href="https://propfirmdiscounts.github.io/site.webmanifest">
+                  {{% seo title=false %}}
+                  <script type="application/ld+json">
+                  {{
+                    "@context": "https://schema.org",
+                    "@type": "BreadcrumbList",
+                    "itemListElement": [
+                      {{
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Home",
+                        "item": "https://propfirmdiscounts.github.io/"
+                      }},
+                      {{
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": "Prop Firm Discount Codes, Deals & Data Directory",
+                        "item": "https://propfirmdiscounts.github.io/prop-firm-discount-codes/"
+                      }},
+                      {{
+                        "@type": "ListItem",
+                        "position": 3,
+                        "name": {{{{ page.title | default: site.title | jsonify }}}},
+                        "item": "https://propfirmdiscounts.github.io/{slug}-deals/"
+                      }}
+                    ]
+                  }}
+                  </script>
+                  <script type="application/ld+json">
+              {faq_str}
+                  </script>
+                  <script type="application/ld+json">
+              {dataset_str}
+                  </script>
+                  <link rel="stylesheet" href="{{{{ "/assets/css/style.css?v=" | append: site.github.build_revision | relative_url }}}}">
+                  {{% include head-custom.html %}}
+                </head>
+                <body>
+                  <div class="container-lg px-3 my-5 markdown-body">
+                    <nav aria-label="Breadcrumb" style="font-size: 0.9em; margin-bottom: 1.5rem; color: #57606a;">
+                      <a href="https://propfirmdiscounts.github.io/">Home</a> &rsaquo;
+                      <a href="https://propfirmdiscounts.github.io/prop-firm-discount-codes/">Prop Firm Discount Codes, Deals &amp; Data Directory</a> &rsaquo;
+                      <span style="color: #24292f; font-weight: 500;">{{{{ page.firm_name | default: page.title | default: site.title }}}}</span>
+                    </nav>
+                    {{{{ content }}}}
+                  </div>
+                </body>
+              </html>'''
               open('_layouts/default.html', 'w', encoding='utf-8').write(layout_html)
           except Exception:
               pass
