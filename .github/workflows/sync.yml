@@ -149,14 +149,13 @@ jobs:
           # code to the deal would be wrong, so the line states only the
           # standing rate.
           from datetime import datetime, timezone
-          now_month = datetime.now(timezone.utc).strftime('%Y-%m')
+          now_month = datetime.now(timezone.utc).strftime('%B %Y')
           if is_global:
-              answer = (f"As of {now_month}, {firm['name']} deals run "
-                        f"{discount_pct} OFF with code {code}, which works any time — the "
-                        f"newest is {raw_newest_title}.")
+              answer = (f"As of {now_month}, {firm['name']} deals offer "
+                        f"{discount_pct} OFF with code {code}, which can be applied on the checkout page anytime.")
           else:
               answer = (f"As of {now_month}, the verified {firm['name']} discount code is "
-                        f"{code} — {discount_pct} OFF, works any time. Its current "
+                        f"{code} — {discount_pct} OFF, which can be applied on the checkout page anytime. Its current "
                         f"deals run their own limited-time campaign codes.")
           readme += answer + '\n\n'
 
