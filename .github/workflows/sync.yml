@@ -53,7 +53,7 @@ jobs:
           set -euo pipefail
 
           python3 - <<'PY'
-          import json, os
+          import json, os, re
 
           def add_off(v):
               v = (v or '').strip()
@@ -63,15 +63,16 @@ jobs:
                   return v + ' off'
               return v
 
+          slug = os.environ['FIRM_SLUG']
+          firm_name = os.environ['FIRM_NAME']
+          is_global = os.environ['IS_GLOBAL'] == 'true'
+          code = os.environ['STANDING_CODE']
+          discount = add_off(os.environ['DISCOUNT'])
+
           # Load observations
           obs = json.load(open('observations.json'))
           firm = obs['dealstore']
           latest = obs['observations'][0]
-          raw_newest_title = (latest.get('title') or '').strip().rstrip('.')
-
-          is_global = os.environ['IS_GLOBAL'] == 'true'
-          code = os.environ['STANDING_CODE']
-          discount = add_off(os.environ['DISCOUNT'])
 
           # The published dataset row for this firm, so the numbers in the repo
           # match the firm page character for character. Falls back to the
@@ -150,13 +151,12 @@ jobs:
           # standing rate.
           from datetime import datetime, timezone
           now_month = datetime.now(timezone.utc).strftime('%B %Y')
-          if is_global:
-              answer = (f"As of {now_month}, {firm['name']} deals offer "
-                        f"{discount_pct} OFF with code {code}, which can be applied on the checkout page anytime.")
-          else:
-              answer = (f"As of {now_month}, the verified {firm['name']} discount code is "
-                        f"{code} — {discount_pct} OFF, which can be applied on the checkout page anytime. Its current "
-                        f"deals run their own limited-time campaign codes.")
+          newest_title = (latest.get('title') or '').strip().rstrip('.')
+          disc_clean = discount[:-4] if discount.lower().endswith(' off') else discount
+          disc_display = f"{disc_clean} OFF" if not disc_clean.upper().endswith('OFF') else disc_clean
+          answer = (f'As of {now_month}, the verified {firm["name"]} discount code is '
+                    f'{code} — {disc_display}, which can be applied on the checkout page anytime. '
+                    f'The newest is "{newest_title}".')
           readme += answer + '\n\n'
 
           if description:
@@ -193,12 +193,12 @@ jobs:
               else:
                   readme += f"- Trustpilot: {tp_score}/5 ({tp_reviews} reviews)\n"
           repo_url = f"https://github.com/propfirmdiscounts/{slug}-deals"
-          readme += f"- GitHub repository: [{repo_url}]({repo_url})\n"
+          readme += f"- GitHub repository: [{firm['name']} Deals Repository]({repo_url})\n"
           if activation:
-              readme += f"- Activate: [{activation}]({activation})\n"
-          readme += f"- Firm page: [{firm['url']}]({firm['url']})\n"
-          readme += ("- Full dataset: [https://github.com/propfirmdiscounts/prop-firm-discount-codes](https://github.com/propfirmdiscounts/prop-firm-discount-codes)\n"
-                     "- Code record: [https://propfirmdiscount.com/api/prop-firm-codes/](https://propfirmdiscount.com/api/prop-firm-codes/)\n\n")
+              readme += f"- Activate: [Activate {firm['name']} Discount Code]({activation})\n"
+          readme += f"- Firm page: [{firm['name']} Page on PropFirmDiscount]({firm['url']})\n"
+          readme += ("- Full dataset: [All Prop Firm Discount Codes Dataset](https://github.com/propfirmdiscounts/prop-firm-discount-codes)\n"
+                     f"- Code record: [{firm['name']} API Record](https://propfirmdiscount.com/api/prop-firm-codes/)\n\n")
 
           readme += f"""## Current {firm['name']} deal: {latest['title']}
 
@@ -215,7 +215,7 @@ jobs:
           else:
               readme += ("- Code: this deal carries its own limited-time campaign code, "
                          "shown on the deal page below\n")
-          readme += f"- Deal page: [{latest['post_url']}]({latest['post_url']})\n\n"
+          readme += f"- Deal page: [{firm['name']} Deal Page]({latest['post_url']})\n\n"
 
           # FAQ headings, phrased as the questions people type. Each answer is
           # built only from the fields above — nothing is asserted here that the
@@ -268,9 +268,9 @@ jobs:
 
           This repository mirrors every deal **{firm['name']}** has published on PropFirmDiscount.com, regenerated from the live API.
 
-          - Data source: [https://propfirmdiscount.com](https://propfirmdiscount.com)
-          - Prop firm profile: [{firm['url']}]({firm['url']})
-          - All firms: [https://github.com/propfirmdiscounts/prop-firm-discount-codes](https://github.com/propfirmdiscounts/prop-firm-discount-codes)
+          - Data source: [PropFirmDiscount.com](https://propfirmdiscount.com)
+          - Prop firm profile: [{firm['name']} Profile]({firm['url']})
+          - All firms: [All Prop Firms Directory](https://github.com/propfirmdiscounts/prop-firm-discount-codes)
 
           ## Fields in `datasets/{os.environ['FIRM_SLUG']}-deals.json`
 
@@ -313,18 +313,27 @@ jobs:
 
           ## License
 
-          Data © PropFirmDiscount. Codes may be referenced with attribution and a link to https://propfirmdiscount.com.
+          Data © PropFirmDiscount. Codes may be referenced with attribution and a link to [PropFirmDiscount.com](https://propfirmdiscount.com).
           """
 
-          with open('README.md', 'w') as f:
+          with open('README.md', 'w', encoding='utf-8') as f:
               f.write(readme)
 
           try:
-              cfg = open('_config.yml', encoding='utf-8').read()
               escaped_desc = answer.replace('"', '\\"')
-              cfg = re.sub(r'(?<=description: ")[^"\n]+',
-                           lambda _: escaped_desc, cfg, count=1)
-              open('_config.yml', 'w', encoding='utf-8').write(cfg)
+              safe_title = f"{firm['name']} - Discount Codes & Deal History".replace('"', '\\"')
+              if os.path.exists('_config.yml'):
+                  cfg = open('_config.yml', encoding='utf-8').read()
+                  if 'description: "' in cfg:
+                      cfg = re.sub(r'(?<=description: ")[^"\n]+',
+                                   lambda _: escaped_desc, cfg, count=1)
+                  else:
+                      cfg += f'\ndescription: "{escaped_desc}"\n'
+                  open('_config.yml', 'w', encoding='utf-8').write(cfg)
+              else:
+                  open('_config.yml', 'w', encoding='utf-8').write(
+                      f'title: "{safe_title}"\ndescription: "{escaped_desc}"\nurl: "https://propfirmdiscounts.github.io"\nbaseurl: "/{slug}-deals"\nplugins:\n  - jekyll-seo-tag\n'
+                  )
           except Exception:
               pass
 

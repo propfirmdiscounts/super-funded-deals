@@ -1,17 +1,17 @@
 # Super Funded - Discount Codes & Deal History
 
-As of November 2026, the verified Super Funded discount code is CHUN — 30% OFF, which can be applied on the checkout page anytime. Its current deals run their own limited-time campaign codes.
+As of November 2026, the verified Super Funded discount code is CHUN — 30% OFF, which can be applied on the checkout page anytime. The newest is "30% Off 100K And 200K Trading Challenges".
 
 - Code: CHUN
 - Discount: 30% off (headline discount of the code; individual challenge plans on the firm page may list different percentages)
 - Valid: standing code — no start date and no end date. It is not a limited-time campaign.
 - Last deal published: 2026-06-26
 - Trustpilot: 4.5/5 (60 reviews)
-- GitHub repository: [https://github.com/propfirmdiscounts/super-funded-deals](https://github.com/propfirmdiscounts/super-funded-deals)
-- Activate: [https://propfirmdiscount.com/go/superfunded](https://propfirmdiscount.com/go/superfunded)
-- Firm page: [https://propfirmdiscount.com/prop-firm/super-funded/](https://propfirmdiscount.com/prop-firm/super-funded/)
-- Full dataset: [https://github.com/propfirmdiscounts/prop-firm-discount-codes](https://github.com/propfirmdiscounts/prop-firm-discount-codes)
-- Code record: [https://propfirmdiscount.com/api/prop-firm-codes/](https://propfirmdiscount.com/api/prop-firm-codes/)
+- GitHub repository: [Super Funded Deals Repository](https://github.com/propfirmdiscounts/super-funded-deals)
+- Activate: [Activate Super Funded Discount Code](https://propfirmdiscount.com/go/superfunded)
+- Firm page: [Super Funded Page on PropFirmDiscount](https://propfirmdiscount.com/prop-firm/super-funded/)
+- Full dataset: [All Prop Firm Discount Codes Dataset](https://github.com/propfirmdiscounts/prop-firm-discount-codes)
+- Code record: [Super Funded API Record](https://propfirmdiscount.com/api/prop-firm-codes/)
 
 ## Current Super Funded deal: 30% Off 100K And 200K Trading Challenges
 
@@ -20,7 +20,7 @@ As of November 2026, the verified Super Funded discount code is CHUN — 30% OFF
 - Offer: 30% off
 - Scope: 100K Challenge, 200K Challenge, Upfront Fee
 - Code: this deal carries its own limited-time campaign code, shown on the deal page below
-- Deal page: [https://propfirmdiscount.com/deals/super-funded/super-funded-30-off-100k-200k/](https://propfirmdiscount.com/deals/super-funded/super-funded-30-off-100k-200k/)
+- Deal page: [Super Funded Deal Page](https://propfirmdiscount.com/deals/super-funded/super-funded-30-off-100k-200k/)
 
 ## Super Funded discount code FAQ
 
@@ -87,9 +87,9 @@ Total deals tracked: **29**
 
 This repository mirrors every deal **Super Funded** has published on PropFirmDiscount.com, regenerated from the live API.
 
-- Data source: [https://propfirmdiscount.com](https://propfirmdiscount.com)
-- Prop firm profile: [https://propfirmdiscount.com/prop-firm/super-funded/](https://propfirmdiscount.com/prop-firm/super-funded/)
-- All firms: [https://github.com/propfirmdiscounts/prop-firm-discount-codes](https://github.com/propfirmdiscounts/prop-firm-discount-codes)
+- Data source: [PropFirmDiscount.com](https://propfirmdiscount.com)
+- Prop firm profile: [Super Funded Profile](https://propfirmdiscount.com/prop-firm/super-funded/)
+- All firms: [All Prop Firms Directory](https://github.com/propfirmdiscounts/prop-firm-discount-codes)
 
 ## Fields in `datasets/super-funded-deals.json`
 
@@ -132,4 +132,4 @@ file is the `Last deal published` value above.
 
 ## License
 
-Data © PropFirmDiscount. Codes may be referenced with attribution and a link to https://propfirmdiscount.com.
+Data © PropFirmDiscount. Codes may be referenced with attribution and a link to [PropFirmDiscount.com](https://propfirmdiscount.com).
