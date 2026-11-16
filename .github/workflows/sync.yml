@@ -337,6 +337,140 @@ jobs:
           except Exception:
               pass
 
+          try:
+              os.makedirs('_layouts', exist_ok=True)
+              faq_data = {
+                  "@context": "https://schema.org",
+                  "@type": "FAQPage",
+                  "mainEntity": [
+                      {
+                          "@type": "Question",
+                          "name": f"What is the {firm['name']} discount code?",
+                          "acceptedAnswer": {
+                              "@type": "Answer",
+                              "text": f"{code}. It is verified by PropFirmDiscount.com and takes {discount_pct} off {firm['name']} challenges and accounts."
+                          }
+                      },
+                      {
+                          "@type": "Question",
+                          "name": f"Does the {firm['name']} discount code expire?",
+                          "acceptedAnswer": {
+                              "@type": "Answer",
+                              "text": "No. It is a standing code — there is no start date and no end date. Promotional deals are separate and are dated individually; the current one is listed above."
+                          }
+                      },
+                      {
+                          "@type": "Question",
+                          "name": f"How much is the current {firm['name']} deal?",
+                          "acceptedAnswer": {
+                              "@type": "Answer",
+                              "text": f"{latest['title']} — published {latest['date_published']}. Offer ends: {latest.get('date_exp') or 'N/A'}. The offer is {add_off(latest['discount_value'])}."
+                          }
+                      }
+                  ]
+              }
+              dataset_data = {
+                  "@context": "https://schema.org",
+                  "@type": "Dataset",
+                  "name": f"{firm['name']} Discount Codes & Deal History Dataset",
+                  "description": answer,
+                  "url": f"https://propfirmdiscounts.github.io/{slug}-deals/",
+                  "sameAs": firm['url'],
+                  "license": "https://propfirmdiscount.com",
+                  "creator": {
+                      "@type": "Organization",
+                      "name": "PropFirmDiscount",
+                      "url": "https://propfirmdiscount.com"
+                  },
+                  "distribution": [
+                      {
+                          "@type": "DataDownload",
+                          "encodingFormat": "application/json",
+                          "contentUrl": f"https://raw.githubusercontent.com/propfirmdiscounts/{slug}-deals/main/datasets/{slug}-deals.json"
+                      }
+                  ],
+                  "temporalCoverage": "2024/2026",
+                  "variableMeasured": [
+                      "deal_id", "title", "discount_value", "standing_code",
+                      "standing_discount", "date_published", "date_exp", "post_url"
+                  ]
+              }
+              faq_str = json.dumps(faq_data, indent=4)
+              dataset_str = json.dumps(dataset_data, indent=4)
+
+              layout_html = f'''<!DOCTYPE html>
+<html lang="{{{{ page.lang | default: site.lang | default: "en-US" }}}}">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{{{ page.title | default: site.title }}}}</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JRN9LT8NNF"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){{dataLayer.push(arguments);}}
+      gtag('js', new Date());
+
+      gtag('config', 'G-JRN9LT8NNF');
+    </script>
+    <!-- Favicon -->
+    <link rel="shortcut icon" type="image/x-icon" href="https://propfirmdiscounts.github.io/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://propfirmdiscounts.github.io/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://propfirmdiscounts.github.io/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://propfirmdiscounts.github.io/apple-touch-icon.png">
+    <link rel="manifest" href="https://propfirmdiscounts.github.io/site.webmanifest">
+    {{% seo title=false %}}
+    <script type="application/ld+json">
+    {{
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {{
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://propfirmdiscounts.github.io/"
+        }},
+        {{
+          "@type": "ListItem",
+          "position": 2,
+          "name": "All Prop Firms & Events",
+          "item": "https://propfirmdiscounts.github.io/prop-firm-discount-codes/"
+        }},
+        {{
+          "@type": "ListItem",
+          "position": 3,
+          "name": {{{{ page.title | default: site.title | jsonify }}}},
+          "item": "https://propfirmdiscounts.github.io/{slug}-deals/"
+        }}
+      ]
+    }}
+    </script>
+    <script type="application/ld+json">
+{faq_str}
+    </script>
+    <script type="application/ld+json">
+{dataset_str}
+    </script>
+    <link rel="stylesheet" href="{{{{ "/assets/css/style.css?v=" | append: site.github.build_revision | relative_url }}}}">
+    {{% include head-custom.html %}}
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      <nav aria-label="Breadcrumb" style="font-size: 0.9em; margin-bottom: 1.5rem; color: #57606a;">
+        <a href="https://propfirmdiscounts.github.io/">Home</a> &rsaquo;
+        <a href="https://propfirmdiscounts.github.io/prop-firm-discount-codes/">All Prop Firms &amp; Events</a> &rsaquo;
+        <span style="color: #24292f; font-weight: 500;">{{{{ page.firm_name | default: page.title | default: site.title }}}}</span>
+      </nav>
+      {{{{ content }}}}
+    </div>
+  </body>
+</html>'''
+              open('_layouts/default.html', 'w', encoding='utf-8').write(layout_html)
+          except Exception:
+              pass
+
           # The Hub card is a deliberately short variant, not a copy of the
           # README. GitHub is where the full history, FAQ and field reference
           # live; the Hub holds the one dated answer sentence plus the few facts
