@@ -319,6 +319,15 @@ jobs:
           with open('README.md', 'w') as f:
               f.write(readme)
 
+          try:
+              cfg = open('_config.yml', encoding='utf-8').read()
+              escaped_desc = answer.replace('"', '\\"')
+              cfg = re.sub(r'(?<=description: ")[^"\n]+',
+                           lambda _: escaped_desc, cfg, count=1)
+              open('_config.yml', 'w', encoding='utf-8').write(cfg)
+          except Exception:
+              pass
+
           # The Hub card is a deliberately short variant, not a copy of the
           # README. GitHub is where the full history, FAQ and field reference
           # live; the Hub holds the one dated answer sentence plus the few facts
