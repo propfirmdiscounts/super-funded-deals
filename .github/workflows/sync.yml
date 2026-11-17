@@ -42,11 +42,21 @@ jobs:
           # discount rate, activation link and Trustpilot figures so the repo
           # cannot drift from the firm page; the same row's last_deal carries
           # the newest deal every other mirror prints.
-          # A fetch failure leaves an empty array and the builder falls back
-          # to the manifest values below.
-          curl -sf --retry 3 --retry-delay 30 \
-            "https://propfirmdiscount.com/api/prop-firm-codes/rows.json?$BUST" \
-            -o firm-record.json || echo '[]' > firm-record.json
+          # Whether the request itself succeeded is recorded separately, because
+          # an empty result means two very different things: an unreachable
+          # endpoint must keep the last known code (an outage is not a
+          # retirement), while a successful response that omits this firm is the
+          # site saying the firm no longer holds a standing code. rows.json only
+          # carries firms that have one — the server joins termmeta on
+          # affiliate_code and skips the empty ones.
+          if curl -sf --retry 3 --retry-delay 30 \
+               "https://propfirmdiscount.com/api/prop-firm-codes/rows.json?$BUST" \
+               -o firm-record.json; then
+            echo ok > firm-record.status
+          else
+            echo '[]' > firm-record.json
+            echo fail > firm-record.status
+          fi
 
       - name: Generate README
         run: |
@@ -97,6 +107,56 @@ jobs:
           # end in "off", so they take the bare rate instead of "50% off off".
           discount_pct = discount[:-4] if discount.endswith(' off') else discount
 
+          # Does this firm still have a standing code? Three outcomes, and the
+          # difference between them is the whole point of this block:
+          #
+          #   standing — the dataset publishes a code for the firm. Print it.
+          #   gone     — the endpoint answered and the firm was NOT in it. The
+          #              server builds rows.json only from firms holding an
+          #              affiliate code, so absence is the site's own statement
+          #              that the code no longer exists. Continuing to print the
+          #              manifest copy here is how a retired code stays alive in
+          #              50 repos for months: every run re-emits the same bytes,
+          #              the commit guard reports "no changes", and nothing ever
+          #              fails.
+          #   unknown  — the fetch failed. An outage is not a retirement, so the
+          #              last known values are kept rather than downgraded.
+          try:
+              fetch_status = open('firm-record.status').read().strip()
+          except Exception:
+              fetch_status = 'fail'
+
+          has_standing = bool((record.get('code') or '').strip())
+          if fetch_status == 'fail':
+              code_state = 'standing' if code.strip() else 'gone'
+          else:
+              code_state = 'standing' if has_standing else 'gone'
+          has_code = code_state == 'standing'
+
+          if not has_code:
+              # No code to attach, so the firm is by definition not a
+              # global-code firm: "global" means every deal redeems the
+              # standing code.
+              code = ''
+              is_global = False
+
+          # The H1 is one fixed string for every firm. It used to switch to
+          # "Deals & Deal History" when the firm had no standing code, which
+          # made one family of repos carry two different head terms for the
+          # same kind of page. Singular "Discount Code" is deliberate: a firm
+          # holds at most one standing code. The history is plural because it
+          # is many deals, and a repo is also the dataset itself.
+          head = f"{firm['name']} Discount Code, Deals History & Dataset"
+
+          # The site name is a second, narrower line: the page title, the
+          # breadcrumb and the og:title. It can state the code and the rate
+          # because it is not a head term — the H1 above carries the words
+          # people search, and stays the same whichever state the firm is in.
+          # With no code there is nothing to add, so the page keeps the plain
+          # name rather than advertising a code it does not hold.
+
+          activation = record.get('activation_link') or ''
+
           # For global firms, the standing code's % discount matches the current deal's % discount,
           # UNLESS the current deal is too old (> 30 days old). If too old (or deal has no % discount),
           # it falls back to the meta db discount above.
@@ -115,12 +175,14 @@ jobs:
               if deal_days_old <= 30 and m_deal_pct:
                   discount_pct = m_deal_pct.group(0)
                   discount = add_off(discount_pct)
-          activation = record.get('activation_link') or ''
-          # The code the site publishes wins, so a swap on the firm page reaches
-          # every file this run writes instead of waiting for the manifest to be
-          # regenerated. Everything below — README, dataset rows, and the
-          # discovery files read back from firm-meta.json — uses this value.
-          code = record.get('code') or code
+
+          # Built after the global-firm rate override above, so the title quotes
+          # the same rate the rest of the page does.
+          if has_code:
+              site_title = f"{firm['name']} Discount Code {code} ({discount}) | Deals & Dataset"
+          else:
+              site_title = head
+
           tp_score = record.get('trustpilot_score')
           tp_reviews = record.get('trustpilot_reviews')
           tp_url = record.get('trustpilot_url') or ''
@@ -157,7 +219,7 @@ jobs:
           # Build README. The H1 is the head term people actually search, and
           # the paragraph under it answers the query in one sentence before any
           # other content — both are what a reader-and-answer engine extracts.
-          readme = f"""# {firm['name']} Discount Code & Deal History
+          readme = f"""# {head}
 
           """
 
@@ -170,14 +232,25 @@ jobs:
           # whose deals carry their own campaign codes, attaching the standing
           # code to the deal would be wrong, so the line states only the
           # standing rate.
+          #
+          # The no-code branch answers the same question a searcher would ask
+          # ("what is the HyroTrader discount code?") with the fact instead of
+          # with a code: the offers are campaigns, each with its own code, and
+          # the newest one is named. Leaving this sentence out would make the
+          # paragraph claim there is nothing to read on a page full of deals.
           from datetime import datetime, timezone
           now_month = datetime.now(timezone.utc).strftime('%B %Y')
           newest_title = (latest.get('title') or '').strip().rstrip('.')
           disc_clean = discount[:-4] if discount.lower().endswith(' off') else discount
           disc_display = f"{disc_clean} OFF" if not disc_clean.upper().endswith('OFF') else disc_clean
-          answer = (f'As of {now_month}, the verified {firm["name"]} discount code is '
-                    f'{code} — {disc_display}, which can be applied on the checkout page anytime. '
-                    f'The newest is "{newest_title}".')
+          if has_code:
+              answer = (f'As of {now_month}, the verified {firm["name"]} discount code is '
+                        f'{code} — {disc_display}, which can be applied on the checkout page anytime. '
+                        f'The newest is "{newest_title}".')
+          else:
+              answer = (f'{firm["name"]} has no standing discount code. Its offers are '
+                        f'campaigns, each with its own code, which the deal page shows — '
+                        f'the newest is "{newest_title}".')
           readme += answer + '\n\n'
 
           if description:
@@ -193,7 +266,15 @@ jobs:
               readme += ('> ' + description.replace('\n', '\n> ') + '\n>\n'
                          f"> — {firm['name']}, in its own description on {source}\n\n")
 
-          if is_global:
+          if not has_code:
+              # Every line here would otherwise restate a code that does not
+              # exist. What is true instead: the last deal, and the fact that
+              # each promotion carries its own code on its own page.
+              readme += f"""- Code: none — {firm['name']} runs no standing discount code
+          - Discounts: each offer is a campaign with its own code, stated on its deal page
+          - Last deal published: {last_deal}
+          """
+          elif is_global:
               # The code applies to every deal this firm runs, so the quoted
               # rate is the newest percentage deal's — the same number the
               # dataset row carries — not a separate "headline" figure.
@@ -214,12 +295,16 @@ jobs:
               else:
                   readme += f"- Trustpilot: {tp_score}/5 ({tp_reviews} reviews)\n"
           repo_url = f"https://github.com/propfirmdiscounts/{slug}-deals"
-          readme += f"- GitHub repository: [{firm['name']} Deals Repository]({repo_url})\n"
+          readme += f"- GitHub repository: [{firm['name']} Discount Code & Deals History Repository]({repo_url})\n"
           if activation:
               readme += f"- Activate: [Activate {firm['name']} Discount Code]({activation})\n"
           readme += f"- Firm page: [{firm['name']} Page on PropFirmDiscount]({firm['url']})\n"
-          readme += ("- Full dataset: [All Prop Firm Discount Codes Dataset](https://github.com/propfirmdiscounts/prop-firm-discount-codes)\n"
-                     f"- Code record: [{firm['name']} API Record](https://propfirmdiscount.com/api/prop-firm-codes/)\n\n")
+          readme += "- Full dataset: [All Prop Firm Discount Codes Dataset](https://github.com/propfirmdiscounts/prop-firm-discount-codes)\n"
+          if has_code:
+              # The API record lists firms that hold a code, so it is the wrong
+              # link to offer a firm that no longer does.
+              readme += f"- Code record: [{firm['name']} API Record](https://propfirmdiscount.com/api/prop-firm-codes/)\n"
+          readme += '\n'
 
           readme += f"""## Latest {firm['name']} deal: {latest['title']}
 
@@ -241,9 +326,16 @@ jobs:
           # FAQ headings, phrased as the questions people type. Each answer is
           # built only from the fields above — nothing is asserted here that the
           # dataset does not carry.
-          readme += f"""## {firm['name']} Discount Code & Deals FAQ
+          #
+          # The first two answers are the ones that go wrong when a firm retires
+          # its code: "{code}." with an empty code prints a lone ".", and the
+          # expiry answer would still promise a standing code that no longer
+          # exists. Both are replaced with the true statement for that firm.
+          readme += f"""## {firm['name']} Discount Code & Deals History FAQ
 
-          **What is the {firm['name']} discount code?**
+          """
+          if has_code:
+              readme += f"""**What is the {firm['name']} discount code?**
 
           {code}. It is verified by PropFirmDiscount.com and takes {discount_pct} off {firm['name']} challenges and accounts.
 
@@ -251,7 +343,14 @@ jobs:
 
           No. It is a standing code — there is no start date and no end date. Promotional deals are separate and are dated individually; the current one is listed above.
 
-          **How much is the current {firm['name']} deal?**
+          """
+          else:
+              readme += f"""**Does {firm['name']} have a discount code?**
+
+          {firm['name']} has no standing discount code. Its offers are campaigns, and each campaign carries its own code on its deal page. The current one is listed above.
+
+          """
+          readme += f"""**How much is the current {firm['name']} deal?**
 
           **{latest['title']}** — published {latest['date_published']}. Offer ends: {latest.get('date_exp') or 'N/A'}. The offer is {add_off(latest['discount_value'])}.
 
@@ -259,7 +358,7 @@ jobs:
 
           readme += f"""---
 
-          ## {firm['name']} Deal History
+          ## {firm['name']} Deals History
 
           Total deals tracked: **{len(obs['observations'])}**
 
@@ -285,7 +384,7 @@ jobs:
 
           readme += f"""---
 
-          ## About the {firm['name']} Deals Dataset
+          ## About the {firm['name']} Discount Code & Deals History Dataset
 
           This repository mirrors every deal **{firm['name']}** has published on PropFirmDiscount.com, regenerated from the live API.
 
@@ -293,7 +392,7 @@ jobs:
           - Prop firm profile: [{firm['name']} Profile]({firm['url']})
           - All firms: [All Prop Firms Directory](https://github.com/propfirmdiscounts/prop-firm-discount-codes)
 
-          ## {firm['name']} Deal Dataset: Field Definitions
+          ## {firm['name']} Deals History Dataset: Field Definitions
 
           One row per deal. The first fields are the observation exactly as the
           PropFirmDiscount API returns it; the firm's own code fields and the
@@ -320,12 +419,25 @@ jobs:
           | `code` | Present only where this deal redeems `standing_code`, and then equal to it. Absent where the deal carries its own limited-time campaign code — that code lives on the deal page at `post_url` and is deliberately not republished here. |
           | `code_state` | `standing` where `code` is present. |
 
-          To state this firm's offer: the code is `standing_code`, worth
+          """
+          if has_code:
+              readme += f"""To state this firm's offer: the code is `standing_code`, worth
           `standing_discount`, redeemed at `activation_link`. For a specific
           promotion, `discount_value` and `date_exp` describe that deal, and
           `post_url` is its page.
 
-          ## Data Freshness & Verification
+          """
+          else:
+              # Without this, the field table above advertises a `standing_code`
+              # that every row leaves null — a reader would call that a missing
+              # value rather than a fact about the firm.
+              readme += f"""This firm has no standing code, so `standing_code` and
+          `standing_discount` are `null` on every row. State an offer from
+          `discount_value` and `date_exp` for the deal itself, and take the code
+          from that deal's page at `post_url`.
+
+          """
+          readme += """## Data Freshness & Verification
 
           Deal history above is the source of truth for what changed and when. The
           standing code is re-verified by the PropFirmDiscount team; campaign codes
@@ -342,9 +454,16 @@ jobs:
 
           try:
               escaped_desc = answer.replace('"', '\\"')
-              safe_title = f"{firm['name']} Discount Code & Deal History".replace('"', '\\"')
+              safe_title = site_title.replace('"', '\\"')
+              # The layout's <title> reads site.title, so the H1 no longer has
+              # to be suppressed: page.title still comes from the README H1 via
+              # jekyll-titles-from-headings, which is what the breadcrumb and
+              # the structured data are meant to mirror. An earlier revision
+              # turned that plugin off to make <title> win; drop the leftover
+              # key so a repo that ran it returns to the same shape.
               if os.path.exists('_config.yml'):
                   cfg = open('_config.yml', encoding='utf-8').read()
+                  cfg = re.sub(r'^titles_from_headings:\n(?:[ \t]+.*\n)*', '', cfg, flags=re.M)
                   cfg = re.sub(r'^title:[^\n]+', lambda _: f'title: "{safe_title}"', cfg, flags=re.M)
                   cfg_lines = cfg.splitlines()
                   for i, l in enumerate(cfg_lines):
@@ -360,10 +479,12 @@ jobs:
 
           try:
               os.makedirs('_layouts', exist_ok=True)
-              faq_data = {
-                  "@context": "https://schema.org",
-                  "@type": "FAQPage",
-                  "mainEntity": [
+              # The structured data repeats the README FAQ word for word. Both
+              # branches are built from the same flags so the page Google reads
+              # and the page a person reads can never disagree about whether
+              # this firm has a code.
+              if has_code:
+                  code_questions = [
                       {
                           "@type": "Question",
                           "name": f"What is the {firm['name']} discount code?",
@@ -380,6 +501,22 @@ jobs:
                               "text": "No. It is a standing code — there is no start date and no end date. Promotional deals are separate and are dated individually; the current one is listed above."
                           }
                       },
+                  ]
+              else:
+                  code_questions = [
+                      {
+                          "@type": "Question",
+                          "name": f"Does {firm['name']} have a discount code?",
+                          "acceptedAnswer": {
+                              "@type": "Answer",
+                              "text": f"{firm['name']} has no standing discount code. Its offers are campaigns, and each campaign carries its own code on its deal page. The current one is listed above."
+                          }
+                      },
+                  ]
+              faq_data = {
+                  "@context": "https://schema.org",
+                  "@type": "FAQPage",
+                  "mainEntity": code_questions + [
                       {
                           "@type": "Question",
                           "name": f"How much is the current {firm['name']} deal?",
@@ -393,7 +530,7 @@ jobs:
               dataset_data = {
                   "@context": "https://schema.org",
                   "@type": "Dataset",
-                  "name": f"{firm['name']} Discount Codes & Deal History Dataset",
+                  "name": f"{firm['name']} Discount Code & Deals History Dataset",
                   "description": answer,
                   "url": f"https://propfirmdiscounts.github.io/{slug}-deals/",
                   "sameAs": firm['url'],
@@ -425,7 +562,7 @@ jobs:
                   <meta charset="UTF-8">
                   <meta http-equiv="X-UA-Compatible" content="IE=edge">
                   <meta name="viewport" content="width=device-width, initial-scale=1">
-                  <title>{{{{ page.title | default: site.title }}}}</title>
+                  <title>{{{{ site.title }}}}</title>
                   <!-- Google tag (gtag.js) -->
                   <script async src="https://www.googletagmanager.com/gtag/js?id=G-JRN9LT8NNF"></script>
                   <script>
@@ -499,16 +636,21 @@ jobs:
           # as long as a landing page reads as advertising rather than data.
           slug = os.environ['FIRM_SLUG']
           name = os.environ['FIRM_NAME']
-          facts = [f"- Code: {code}", f"- Discount: {discount}",
-                   "- Valid: Standing code — no published expiry date",
-                   f"- Last deal published: {last_deal}"]
+          if has_code:
+              facts = [f"- Code: {code}", f"- Discount: {discount}",
+                       "- Valid: Standing code — no published expiry date",
+                       f"- Last deal published: {last_deal}"]
+          else:
+              facts = [f"- Code: none — {name} runs no standing discount code",
+                       "- Discounts: each offer is a campaign with its own code, stated on its deal page",
+                       f"- Last deal published: {last_deal}"]
           if tp_score:
               facts.append(f"- Trustpilot: {tp_score}/5 ({tp_reviews} reviews)")
           if activation:
               facts.append(f"- Activate: {activation}")
           facts.append(f"- Firm page: {firm['url']}")
 
-          # Current deal block for the card — gives it substance.
+          # Latest deal block for the card — gives it substance.
           current_deal = f"## Latest {firm['name']} deal: {latest['title']}\n\n"
           current_deal += f"- Published: {latest['date_published']}\n"
           current_deal += f"- Offer ends: {latest.get('date_exp') or 'N/A'}\n"
@@ -526,7 +668,7 @@ jobs:
 
           front = ('---\n'
                    'license: other\n'
-                   'pretty_name: ' + name + ' Discount Code\n'
+                   'pretty_name: ' + name + ' Discount Code & Deals History\n'
                    'configs:\n'
                    '- config_name: ' + slug + '-deals\n'
                    '  data_files:\n'
@@ -545,7 +687,14 @@ jobs:
           disc_num = discount_pct.lower().replace('off', '').strip()
           card_rate = f"{disc_num} Off"
           card_year = datetime.now(timezone.utc).strftime('%Y')
-          body = (f"# {name} Discount Code: {card_rate} with code {code} ({card_year})\n\n"
+          # The card H1 is the Hub's own head line. It carried "10% Off with
+          # code PFD" — the exact claim this repository has just stopped being
+          # able to support.
+          if has_code:
+              card_h1 = f"{name} Discount Code: {card_rate} with code {code} ({card_year})"
+          else:
+              card_h1 = f"{name} Deals History ({card_year})"
+          body = (f"# {card_h1}\n\n"
                   f"{answer}\n\n"
                   + '\n'.join(facts) + "\n\n"
                   + current_deal
@@ -588,13 +737,17 @@ jobs:
               r = dict(o)
               r['prop_firm'] = firm['name']
               r['prop_firm_slug'] = os.environ['FIRM_SLUG']
-              r['standing_code'] = code
+              # null, not "": a reader must be able to tell "this firm has no
+              # standing code" from "the sync did not fill the field in". The
+              # string "" reads as the latter and invites someone to repair it
+              # with a stale code.
+              r['standing_code'] = code if has_code else None
               # The rate the standing code itself gives, kept apart from
               # discount_value (this deal's own rate). Without it a reader
               # pairs the code with the deal's percentage - on this firm 45%
               # off one promotion is not the code's 50% - and states a
               # discount the code does not give.
-              r['standing_discount'] = discount_pct
+              r['standing_discount'] = discount_pct if has_code else None
               r['activation_link'] = activation
               r['firm_page_url'] = firm_page_url
               if is_global:
@@ -620,11 +773,14 @@ jobs:
               with open(gh_env, 'a', encoding='utf-8') as f:
                   f.write(f"RESOLVED_CODE={code}\n")
                   f.write(f"RESOLVED_DISCOUNT={discount_pct}\n")
+                  # The discovery step cannot re-derive this: its only other
+                  # input is the manifest, which still holds the retired code.
+                  f.write(f"RESOLVED_CODE_STATE={code_state}\n")
           PY
 
           # Remove the two build inputs - used only for building README, not
           # published, so the repo holds data and documentation only.
-          rm -f observations.json firm-record.json
+          rm -f observations.json firm-record.json firm-record.status
 
       - name: Generate discovery files
         run: |
@@ -634,9 +790,15 @@ jobs:
           # Defaults keep the step working if it is ever run on its own.
           CODE="${RESOLVED_CODE:-$STANDING_CODE}"
           RATE="${RESOLVED_DISCOUNT:-$DISCOUNT}"
+          STATE="${RESOLVED_CODE_STATE:-standing}"
 
+          # Two shapes, because "Use code X for Y" with no X is what these files
+          # said the moment a firm lost its code. Both are written from the same
+          # resolved state, so llms.txt, ai.txt, the README and the dataset all
+          # agree within one run.
+          if [ "$STATE" = "standing" ]; then
           cat > llms.txt << EOF
-          # $FIRM_NAME Discount Codes
+          # $FIRM_NAME Discount Code & Deals History
 
           This dataset tracks historical deal observations for $FIRM_NAME from PropFirmDiscount.com.
 
@@ -660,6 +822,30 @@ jobs:
 
           - Prop firm profile: https://propfirmdiscount.com/prop-firm/$FIRM_SLUG/
           EOF
+          else
+          cat > llms.txt << EOF
+          # $FIRM_NAME Discount Code & Deals History
+
+          This dataset tracks historical deal observations for $FIRM_NAME from PropFirmDiscount.com.
+
+          $FIRM_NAME has no standing discount code. Each offer is a campaign with
+          its own code, stated on that deal's page in the dataset below.
+
+          Prop firm page: https://propfirmdiscount.com/prop-firm/$FIRM_SLUG/
+          EOF
+
+          cat > ai.txt << EOF
+          # $FIRM_NAME - PropFirmDiscount.com
+
+          Historical deal observations for $FIRM_NAME prop firm.
+
+          ## Discount Code
+
+          $FIRM_NAME has no standing discount code. Its offers are campaigns, and
+          each campaign carries its own code, shown on that deal's page. Take the
+          code from the newest deal's page: https://propfirmdiscount.com/prop-firm/$FIRM_SLUG/
+          EOF
+          fi
 
           cat > LICENSE <<'EOF'
           Copyright (c) 2026 PropFirmDiscount. All rights reserved.
@@ -711,8 +897,16 @@ jobs:
       - name: Commit and push
         run: |
           set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "Prop Firm Discount"
+          git config user.email "73492456+propfirmdiscounts@users.noreply.github.com"
+          # A per-repo favicon.ico was copied into every mirror by a one-off
+          # deploy script. Nothing reads it: _layouts/default.html points the
+          # icon links at the org root, so the copy served no page. Dropping it
+          # here retires the file through a normal Sync commit instead of a
+          # second hand-run push with its own message.
+          if [ -f favicon.ico ]; then
+            git rm -q --ignore-unmatch favicon.ico
+          fi
           git add -A
           if git diff --cached --quiet; then
             echo "no changes"
