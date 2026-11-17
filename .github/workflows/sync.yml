@@ -13,7 +13,7 @@ permissions:
 
 concurrency:
   group: sync
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 env:
   HF_NAMESPACE: superfunded
@@ -542,7 +542,10 @@ jobs:
                    '  - trading\n'
                    '  - ' + slug + '\n'
                    '---\n\n')
-          body = (f"# {name} Discount Code & Deal History\n\n"
+          disc_num = discount_pct.lower().replace('off', '').strip()
+          card_rate = f"{disc_num} Off"
+          card_year = datetime.now(timezone.utc).strftime('%Y')
+          body = (f"# {name} Discount Code: {card_rate} with code {code} ({card_year})\n\n"
                   f"{answer}\n\n"
                   + '\n'.join(facts) + "\n\n"
                   + current_deal
