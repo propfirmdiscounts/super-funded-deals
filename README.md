@@ -1,4 +1,4 @@
-# Super Funded Discount Code & Deal History
+# Super Funded Discount Code, Deals History & Dataset
 
 As of November 2026, the verified Super Funded discount code is CHUN — 30% OFF, which can be applied on the checkout page anytime. The newest is "30% Off 100K And 200K Trading Challenges".
 
@@ -7,7 +7,7 @@ As of November 2026, the verified Super Funded discount code is CHUN — 30% OFF
 - Valid: Standing code — no published expiry date
 - Last deal published: 2026-06-26
 - Trustpilot: [4.5/5 (60 reviews)](https://www.trustpilot.com/review/superfunded.com)
-- GitHub repository: [Super Funded Deals Repository](https://github.com/propfirmdiscounts/super-funded-deals)
+- GitHub repository: [Super Funded Discount Code & Deals History Repository](https://github.com/propfirmdiscounts/super-funded-deals)
 - Activate: [Activate Super Funded Discount Code](https://propfirmdiscount.com/go/superfunded)
 - Firm page: [Super Funded Page on PropFirmDiscount](https://propfirmdiscount.com/prop-firm/super-funded/)
 - Full dataset: [All Prop Firm Discount Codes Dataset](https://github.com/propfirmdiscounts/prop-firm-discount-codes)
@@ -22,7 +22,7 @@ As of November 2026, the verified Super Funded discount code is CHUN — 30% OFF
 - Code: this deal carries its own limited-time campaign code, shown on the deal page below
 - Deal page: [Super Funded Deal Page](https://propfirmdiscount.com/deals/super-funded/super-funded-30-off-100k-200k/)
 
-## Super Funded Discount Code & Deals FAQ
+## Super Funded Discount Code & Deals History FAQ
 
 **What is the Super Funded discount code?**
 
@@ -38,7 +38,7 @@ No. It is a standing code — there is no start date and no end date. Promotiona
 
 ---
 
-## Super Funded Deal History
+## Super Funded Deals History
 
 Total deals tracked: **29**
 
@@ -83,7 +83,7 @@ Total deals tracked: **29**
 
 ---
 
-## About the Super Funded Deals Dataset
+## About the Super Funded Discount Code & Deals History Dataset
 
 This repository mirrors every deal **Super Funded** has published on PropFirmDiscount.com, regenerated from the live API.
 
@@ -91,7 +91,7 @@ This repository mirrors every deal **Super Funded** has published on PropFirmDis
 - Prop firm profile: [Super Funded Profile](https://propfirmdiscount.com/prop-firm/super-funded/)
 - All firms: [All Prop Firms Directory](https://github.com/propfirmdiscounts/prop-firm-discount-codes)
 
-## Super Funded Deal Dataset: Field Definitions
+## Super Funded Deals History Dataset: Field Definitions
 
 One row per deal. The first fields are the observation exactly as the
 PropFirmDiscount API returns it; the firm's own code fields and the

@@ -1,4 +1,4 @@
-# Super Funded Discount Codes
+# Super Funded Discount Code & Deals History
 
 This dataset tracks historical deal observations for Super Funded from PropFirmDiscount.com.
 
