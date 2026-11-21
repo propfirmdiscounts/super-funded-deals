@@ -191,11 +191,14 @@ jobs:
           # carries no summary for, in which case the quote is left out.
           description = (record.get('description') or '').strip()
 
-          # For global firms, append " with code {code}" to all deal titles
+          # For global firms, append " (code {code})" to all deal titles
           if is_global and code:
-              suffix = f" with code {code}"
+              suffix = f" (code {code})"
               for o in obs['observations']:
                   t = (o.get('title') or '').strip().rstrip('.')
+                  old_suffix = f" with code {code}"
+                  if t.lower().endswith(old_suffix.lower()):
+                      t = t[:-len(old_suffix)].rstrip()
                   if t and not t.lower().endswith(suffix.lower()):
                       o['title'] = t + suffix
               latest = obs['observations'][0]
